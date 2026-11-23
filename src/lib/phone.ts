@@ -9,6 +9,11 @@ export function normalizeLeadPhone(phone: unknown): string {
   return digits;
 }
 
+/** Login phone cleanup (same +91 / leading-0 rules; kept for auth call sites and tests). */
+export function extractCleanPhone(raw: string): string {
+  return normalizeLeadPhone(raw);
+}
+
 export function placeholderLeadEmail(phone: unknown): string {
   const token = normalizeLeadPhone(phone) || "unknown";
   return `lead.${token.slice(0, 32)}@example.com`;

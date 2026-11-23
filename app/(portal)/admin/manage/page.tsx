@@ -9,7 +9,7 @@ import { presentUser } from "@/modules/presenters";
 import { requireSuperadmin } from "@/server/actor";
 import { USER_TYPE_ADMIN } from "@/server/auth";
 import { readSearch, type SearchParams } from "@/server/request";
-import { deleteAdminById } from "../delete/[admin_id]/route";
+import { deleteAdminById } from "@/modules/users/delete-admin";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Manage Admin Users" };

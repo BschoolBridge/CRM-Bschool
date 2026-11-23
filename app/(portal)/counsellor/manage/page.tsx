@@ -8,7 +8,7 @@ import { presentCounsellor } from "@/modules/presenters";
 import { requireAdmin } from "@/server/actor";
 import { adminCan } from "@/server/auth";
 import { readSearch, type SearchParams } from "@/server/request";
-import { deleteCounsellorById } from "../delete/[counsellor_id]/route";
+import { deleteCounsellorById } from "@/modules/users/delete-counsellor";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Manage Counsellors" };

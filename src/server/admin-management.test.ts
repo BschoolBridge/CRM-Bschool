@@ -90,10 +90,11 @@ async function load() {
   const actor = await import("./actor");
   const users = await import("../modules/users/user.service");
   const add = await import("../../app/(portal)/admin/add/page");
+  const addActions = await import("../modules/users/admin-form-actions");
   const edit = await import("../../app/(portal)/admin/edit/[admin_id]/page");
   const manage = await import("../../app/(portal)/admin/manage/page");
-  const remove = await import("../../app/(portal)/admin/delete/[admin_id]/route");
-  return { actor, users, add, edit, manage, remove };
+  const remove = await import("../modules/users/delete-admin");
+  return { actor, users, add: { ...add, ...addActions }, edit: { ...edit, ...addActions }, manage, remove };
 }
 
 beforeEach(() => {
@@ -148,9 +149,7 @@ describe("superadmin admin management", () => {
     await expect(edit.default({ params: Promise.resolve({ admin_id: "5" }) })).rejects.toThrow("REDIRECT /admin/home/");
     await expect(edit.saveAdminEdit(5, null, fd)).rejects.toThrow("REDIRECT /admin/home/");
     await expect(manage.default({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT /admin/home/");
-    await expect(
-      remove.POST(new Request("http://127.0.0.1/admin/delete/5/"), { params: Promise.resolve({ admin_id: "5" }) }),
-    ).rejects.toThrow("REDIRECT /admin/home/");
+    await expect(remove.deleteAdminById(5)).rejects.toThrow("REDIRECT /admin/home/");
     await expect(users.createAdmin({} as UserForm, LIMITED_PERMISSIONS)).rejects.toThrow("REDIRECT /admin/home/");
     await expect(users.updateAdmin(5, 50, null, {} as UserForm, LIMITED_PERMISSIONS)).rejects.toThrow("REDIRECT /admin/home/");
 

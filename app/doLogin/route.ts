@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { hashPassword, passwordNeedsRehash, simulatePasswordCheck, verifyPassword } from "../../src/lib/password";
+import { extractCleanPhone } from "../../src/lib/phone";
 import { prisma } from "../../src/lib/prisma";
 import { homeFor, sessionAuthHash, USER_TYPE_ADMIN } from "../../src/server/auth";
 import { flash } from "../../src/server/flash";
@@ -10,17 +11,6 @@ export const dynamic = "force-dynamic";
 
 export function GET() {
   return new NextResponse("<h4>Denied</h4>", { status: 405, headers: { "content-type": "text/html; charset=utf-8" } });
-}
-
-export function extractCleanPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length === 12 && digits.startsWith("91")) {
-    return digits.slice(2);
-  }
-  if (digits.length === 11 && digits.startsWith("0")) {
-    return digits.slice(1);
-  }
-  return digits;
 }
 
 export async function POST(request: Request) {

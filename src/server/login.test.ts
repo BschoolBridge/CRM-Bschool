@@ -117,7 +117,7 @@ describe("login", () => {
   });
 
   it("normalizes phone formats (+91, leading 0, spaces)", async () => {
-    const { extractCleanPhone } = await import("../../app/doLogin/route");
+    const { extractCleanPhone } = await import("../lib/phone");
     expect(extractCleanPhone("8957056200")).toBe("8957056200");
     expect(extractCleanPhone("+91 89570 56200")).toBe("8957056200");
     expect(extractCleanPhone("918957056200")).toBe("8957056200");

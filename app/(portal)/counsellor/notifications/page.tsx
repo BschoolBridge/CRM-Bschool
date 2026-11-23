@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDjango } from "@/lib/time";
 import { currentCounsellor, requireCounsellor } from "@/server/actor";
 import { readSearch, type SearchParams } from "@/server/request";
-import { deleteCounsellorNotificationById } from "../notification/delete/[notification_id]/route";
+import { deleteCounsellorNotificationById } from "@/modules/notifications/delete-notifications";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Notifications" };
