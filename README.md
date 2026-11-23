@@ -9,7 +9,7 @@ Next.js App Router + Prisma + MariaDB. URL paths, AdminLTE chrome, and lead/admi
 3. `npm install`
 4. `npx prisma migrate deploy`
 5. `npm run db:seed`
-6. Create an admin: locally run `npm run user:create-superuser`, or on Hostinger (no terminal) set `BOOTSTRAP_ADMIN_EMAIL` + `BOOTSTRAP_ADMIN_PASSWORD`, restart once, then remove those env vars
+6. `npm run user:create-superuser`
 7. `npm run dev` — http://127.0.0.1:8000/
 
 Login uses email and the existing `pbkdf2_sha256` password hashes. Pages are server-rendered; lead lists are paginated in the database.
