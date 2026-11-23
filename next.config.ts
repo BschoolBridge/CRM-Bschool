@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/adapter-mariadb", "mariadb", "pino", "pino-pretty", "exceljs", "nodemailer", "ioredis"],
   experimental: {
     serverActions: { bodySizeLimit: "32mb" },
+    // Shared hosts (Hostinger) often hit thread/process limits during parallel builds.
+    cpus: 1,
   },
   async headers() {
     return [
