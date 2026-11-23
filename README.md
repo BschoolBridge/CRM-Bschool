@@ -19,10 +19,10 @@ Login uses email and the existing `pbkdf2_sha256` password hashes. Pages are ser
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Next.js dev server on `:8000` |
-| `npm run build` / `npm start` | Production build and server |
+| `npm run build` / `npm start` | Production build (runs `prisma migrate deploy`, then Next) and server |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest. Uses a dummy database URL and does not need MariaDB |
-| `npm run db:migrate` | Apply Prisma migrations |
+| `npm run db:migrate` | Apply Prisma migrations (also runs automatically during `npm run build`) |
 | `npm run db:seed` | Reference data |
 | `npm run user:create-superuser` | Interactive admin user |
 | `npm run data:import-django` | Copy Django users into a disposable MariaDB. Does not copy leads or other CRM rows |
