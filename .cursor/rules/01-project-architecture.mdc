@@ -1,0 +1,88 @@
+---
+description: Architecture and separation of concerns for the CRM
+alwaysApply: true
+---
+
+# Architecture and Module Boundaries
+
+## 1. Follow the Existing Architecture
+
+- Inspect the current architecture before proposing changes.
+- Preserve established module boundaries and naming conventions.
+- Do not reorganize the entire codebase without a concrete need.
+- Prefer incremental architectural improvements over large rewrites.
+- Follow the installed Next.js version and its actual conventions.
+
+## 2. Separate Responsibilities
+
+Keep responsibilities appropriately separated:
+
+- UI components render interface elements and handle presentation.
+- Server Actions or Route Handlers coordinate supported application
+  operations at the server boundary.
+- Services implement business operations and workflow rules.
+- Repositories or a centralized data-access layer encapsulate database
+  access when that pattern fits the existing project.
+- Validation schemas define input constraints.
+- Authentication and authorization utilities enforce identity and access.
+- Shared types describe application contracts.
+
+These are responsibility boundaries, not a requirement to create a
+separate file for every function.
+
+Do not place substantial business logic directly inside UI components.
+Do not duplicate the same business rules across API endpoints.
+
+## 3. Next.js Conventions
+
+- Follow the project's existing App Router or Pages Router architecture.
+- Do not mix routing approaches without a clear migration requirement.
+- Respect Server Component and Client Component boundaries.
+- Use Client Components only where browser-side interactivity requires them.
+- Keep database access and secrets exclusively on the server.
+- Never import server-only modules into browser-executable code.
+- Use server-only protections for sensitive modules where supported.
+- Avoid unnecessary client-side state and duplicate data fetching.
+- Follow the existing loading, error, not-found, and layout conventions.
+
+## 4. TypeScript
+
+- Preserve strict type safety.
+- Avoid `any`, unsafe type assertions, and non-null assertions.
+- When an unsafe construct is necessary, isolate it and document why.
+- Use explicit domain types and narrow types where appropriate.
+- Do not duplicate types that can be safely derived from existing schemas.
+- Validate untrusted runtime data instead of trusting TypeScript types.
+- Keep database types, API contracts, and UI types consistent.
+
+## 5. Error Handling
+
+- Handle expected business failures explicitly.
+- Use consistent error responses at application boundaries.
+- Do not expose stack traces, SQL errors, credentials, or internal paths.
+- Do not swallow exceptions silently.
+- Avoid broad catch blocks that hide the underlying failure.
+- Log unexpected server errors using existing logging conventions.
+- Never return a success response after an operation has failed.
+- Preserve transaction rollback behavior when database operations fail.
+
+## 6. Dependencies and Abstractions
+
+- Prefer existing project dependencies and native platform capabilities.
+- Introduce a new package only when its value justifies its maintenance,
+  security, compatibility, and bundle-size costs.
+- Check whether an existing utility already solves the problem.
+- Avoid premature abstractions and speculative extensibility.
+- Keep modules cohesive and interfaces focused.
+- Avoid circular dependencies.
+- Do not introduce architectural patterns solely to make the code
+  appear sophisticated.
+
+## 7. Maintainability
+
+- Use descriptive names consistent with existing conventions.
+- Keep functions focused on a coherent responsibility.
+- Extract shared logic when duplication is meaningful.
+- Avoid unnecessary indirection and excessive file fragmentation.
+- Document non-obvious business rules and important trade-offs.
+- Remove dead code only after verifying that it is genuinely unused.

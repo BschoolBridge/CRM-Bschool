@@ -1,0 +1,91 @@
+---
+description: Mandatory senior engineer review for every meaningful change
+alwaysApply: true
+---
+
+# Senior Engineer Code Review
+
+Before completing a meaningful change, review the implementation as
+if you were responsible for maintaining the CRM in production.
+
+## 1. Correctness Review
+
+- Does the implementation satisfy the actual requirement?
+- Are existing business rules preserved?
+- Are all relevant execution paths handled?
+- Are edge cases and failure scenarios addressed?
+- Can the operation leave data in a partially updated state?
+- Are duplicate submissions and concurrent updates handled appropriately?
+- Are return values and error responses correct?
+
+## 2. Architecture Review
+
+- Does the change follow existing architectural boundaries?
+- Has existing functionality been reused where appropriate?
+- Has unnecessary duplication been introduced?
+- Is business logic in the correct layer?
+- Are there circular dependencies or unnecessary abstractions?
+- Does the change create unnecessary coupling?
+- Are interfaces and types consistent with existing modules?
+
+## 3. Security Review
+
+- Is all untrusted input validated on the server?
+- Is authorization enforced for every protected operation?
+- Can a user access another user's restricted records?
+- Can a user modify protected fields?
+- Are database operations safe from injection?
+- Can sensitive information leak through logs, responses, or browser props?
+- Are sessions, cookies, uploads, and exports handled safely?
+- Have relevant security regression tests been added?
+
+## 4. Performance Review
+
+- Are there unnecessary database queries?
+- Are N+1 patterns or unbounded data retrieval present?
+- Are expensive operations appropriately bounded?
+- Is client-side JavaScript unnecessarily large?
+- Are cache invalidation and data freshness correct?
+- Could concurrent requests expose a race condition?
+- Does the implementation scale reasonably for expected CRM workloads?
+
+## 5. Maintainability Review
+
+- Are names meaningful and consistent with the codebase?
+- Are functions focused and reasonably sized?
+- Is the control flow easy to follow?
+- Are comments useful and accurate?
+- Are there unnecessary dependencies or abstractions?
+- Is the code unnecessarily difficult to test?
+- Are errors handled explicitly?
+- Is there duplicated logic that should use an existing shared utility?
+
+## 6. Regression Review
+
+- Which existing modules depend on the modified code?
+- Have shared components or utilities changed behavior?
+- Have existing routes and API contracts been preserved?
+- Are database migrations compatible with existing records?
+- Are authentication and permission boundaries unchanged or
+  intentionally updated?
+- Are loading, empty, error, and success states preserved?
+
+## 7. Final Review Gate
+
+Before reporting completion:
+
+1. Review the final diff.
+2. Remove accidental edits, temporary debugging statements,
+   dead code introduced by the change, and unused imports.
+3. Run relevant automated checks.
+4. Fix regressions introduced by the implementation.
+5. Confirm that no unrelated functionality was removed.
+6. Report any unresolved concerns.
+
+Do not make unrelated refactoring changes merely to improve the diff.
+
+Never claim that code has passed a security audit, performance benchmark,
+or test suite unless the corresponding verification was performed.
+
+If a serious defect cannot be fixed safely within the task's scope,
+explain the defect and the recommended next step.

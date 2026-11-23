@@ -1,0 +1,78 @@
+---
+description: Performance, efficient rendering, database access, and scalability
+alwaysApply: true
+---
+
+# Performance Engineering
+
+## 1. Measure Before Optimizing
+
+- Identify the actual bottleneck before changing architecture.
+- Use profiling, query inspection, logs, or reproducible measurements
+  when available.
+- Avoid speculative optimization and premature complexity.
+- Establish a baseline when the change has a measurable performance impact.
+- Do not claim performance improvements without supporting evidence.
+
+## 2. Database Efficiency
+
+- Avoid N+1 query patterns.
+- Fetch only the fields needed by the operation.
+- Paginate large lists and exports.
+- Use appropriate indexes based on actual query patterns.
+- Inspect execution plans for expensive queries when possible.
+- Avoid fetching an entire table to filter records in application memory.
+- Avoid repeated database queries within loops.
+- Use transactions for consistency, not as a substitute for sound design.
+- Bound query sizes and execution time where appropriate.
+- Consider connection pool limits and concurrent workloads.
+
+## 3. Next.js Rendering
+
+- Use Server Components for server-rendered content when appropriate.
+- Use Client Components only for required interactivity.
+- Avoid sending large, unnecessary payloads to the browser.
+- Avoid unnecessary hydration and client-side JavaScript.
+- Reuse existing caching and data-fetching conventions.
+- Do not cache sensitive or user-specific data across users.
+- Define cache invalidation behavior explicitly for mutable CRM records.
+- Avoid stale lead assignments, fee records, permissions, and user details.
+- Verify cache behavior against the installed Next.js version.
+
+## 4. API and Server Operations
+
+- Validate pagination, sorting, and filtering parameters.
+- Apply limits to expensive operations.
+- Avoid sequential network or database operations when safe parallelism
+  provides a meaningful benefit.
+- Do not introduce uncontrolled parallelism.
+- Use bounded concurrency for bulk operations.
+- Apply timeouts and predictable failure handling to external services.
+- Avoid blocking operations in latency-sensitive request paths.
+- Keep response payloads appropriately small.
+
+## 5. Scalability
+
+- Keep modules independent enough to evolve without broad rewrites.
+- Avoid unnecessary shared mutable state.
+- Ensure the application works across multiple server instances.
+- Do not rely on in-memory sessions or locks when deployment requires
+  cross-instance coordination.
+- Consider idempotency for retries and repeated submissions.
+- Ensure scheduled jobs and background work do not run unintentionally
+  on every application instance.
+- Avoid premature microservices and distributed systems.
+- Introduce queues, caching, or additional infrastructure only when
+  requirements and evidence justify them.
+
+## 6. Performance Verification
+
+When a change may affect performance:
+
+- Inspect query count and expensive database operations.
+- Check payload size and unnecessary client JavaScript.
+- Review cache correctness and invalidation.
+- Test realistic list sizes where feasible.
+- Check for unbounded memory growth or loops.
+- Compare measurements before and after when possible.
+- Preserve security checks even when optimizing.

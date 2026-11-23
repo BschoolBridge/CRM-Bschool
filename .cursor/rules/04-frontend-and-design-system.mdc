@@ -1,0 +1,104 @@
+---
+description: Frontend consistency, component reuse, accessibility, and UX
+alwaysApply: true
+---
+
+# Frontend Engineering and Design Consistency
+
+## 1. Inspect the Existing Design System
+
+Before implementing or modifying UI:
+
+- Inspect existing pages and layouts.
+- Inspect shared components and component variants.
+- Inspect Tailwind configuration, CSS variables, and global styles.
+- Inspect typography, spacing, colors, borders, shadows, and radii.
+- Inspect icons, table styles, form controls, dialogs, and notifications.
+- Identify established responsive breakpoints and layout conventions.
+- Reuse the existing theme instead of inventing a new one.
+
+## 2. Component Reuse
+
+Search for reusable implementations of:
+
+- Buttons and action menus.
+- Inputs, selects, checkboxes, and form fields.
+- Dialogs, drawers, and confirmation prompts.
+- Tables, pagination, sorting, and filtering.
+- Cards, badges, and status indicators.
+- Navigation, sidebars, headers, and breadcrumbs.
+- Loading states, empty states, and error states.
+- Toast notifications and form validation messages.
+
+Reuse existing components where they fit the requirements.
+
+Extend existing components using established variants when appropriate.
+
+Do not create duplicate components with slightly different styling
+unless the requirements justify a genuinely different component.
+
+Do not replace the existing component library with another library
+without explicit justification.
+
+## 3. Visual Consistency
+
+- Preserve the existing color palette and visual hierarchy.
+- Follow established spacing and typography conventions.
+- Reuse design tokens instead of scattering arbitrary color values.
+- Preserve the existing sidebar, header, and page layout patterns.
+- Match the existing treatment of primary and secondary actions.
+- Use consistent interaction states, transitions, and focus indicators.
+- Avoid unnecessary gradients, glassmorphism, decorative effects,
+  excessive rounded cards, and gratuitous animations.
+- Do not redesign unrelated pages while implementing a feature.
+- Do not add icons or imagery merely to fill empty space.
+
+## 4. Functional Completeness
+
+- Implement real interactions, not decorative placeholders.
+- Connect forms to actual validated application operations.
+- Show useful success and error feedback.
+- Preserve unsaved changes where appropriate.
+- Prevent duplicate submissions for sensitive operations.
+- Implement loading, empty, error, and success states.
+- Add confirmation for destructive or irreversible actions.
+- Preserve search, sorting, pagination, and filtering behavior.
+- Ensure displayed status values match actual persisted data.
+- Avoid fake metrics, hardcoded records, and mock data in production paths.
+
+## 5. Accessibility and Responsive Behavior
+
+- Use semantic HTML elements.
+- Associate labels with their form controls.
+- Support keyboard navigation and visible focus.
+- Use accessible dialog and menu behavior.
+- Provide accessible names for icon-only buttons.
+- Do not communicate status using color alone.
+- Preserve sufficient text and interface contrast.
+- Check layouts at existing responsive breakpoints.
+- Prevent tables, forms, and dialogs from breaking narrow layouts.
+- Respect reduced-motion preferences where applicable.
+
+## 6. React and Next.js Quality
+
+- Follow the existing Server Component and Client Component boundaries.
+- Keep components focused and understandable.
+- Avoid unnecessary useEffect, useMemo, and useCallback.
+- Avoid duplicating server data in client state without a reason.
+- Use stable keys for rendered collections.
+- Avoid state updates that can be derived from existing state or props.
+- Prevent unnecessary re-renders where they materially affect performance.
+- Follow the existing form-handling and data-fetching patterns.
+- Do not expose secrets or privileged data through client props.
+
+## 7. Before Finishing UI Work
+
+Verify:
+
+- Existing pages still use their original design language.
+- Shared components have not regressed.
+- Forms validate and submit correctly.
+- Loading, empty, error, and success states work.
+- Role-based visibility matches server-side authorization.
+- Responsive behavior remains usable.
+- No placeholder content or dead controls remain.

@@ -1,0 +1,774 @@
+// Column names intentionally mirror the original Django models so the data
+// migration is a straight copy and templates keep their familiar field names.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  password     String    @db.VarChar(128)
+  last_login   DateTime?
+  is_superuser Boolean   @default(false)
+  first_name   String    @default("") @db.VarChar(150)
+  last_name    String    @default("") @db.VarChar(150)
+  is_staff     Boolean   @default(false)
+  is_active    Boolean   @default(true)
+  date_joined  DateTime  @default(now())
+  email        String    @unique @db.VarChar(254)
+  user_type    String    @default("1") @db.VarChar(1)
+  gender       String    @default("") @db.VarChar(1)
+  profile_pic  String?   @db.VarChar(100)
+  address      String    @db.Text
+  phone        String    @default("") @db.VarChar(15)
+  fcm_token    String    @db.Text
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  admin_profile          Admin?
+  counsellor             Counsellor?
+  admin_notifications    NotificationAdmin[]
+  data_access_logs       DataAccessLog[]
+  approved_transfers     LeadTransfer[]
+  created_targets        DailyTarget[]
+  activity_unfreezes     CounsellorActivityFreezeLog[]
+  admin_logged_activities LeadActivity[]          @relation("ActivityLoggedByAdmin")
+  created_admissions     AdmittedStudent[]
+  admitted_student_remarks AdmittedStudentRemark[]
+  admitted_student_activities AdmittedStudentActivity[]
+  shortlist_entries      CollegeShortlistEntry[]
+
+  @@index([user_type])
+  @@map("users")
+}
+
+model Admin {
+  id                       Int     @id @default(autoincrement())
+  admin_id                 Int     @unique
+  is_superadmin            Boolean @default(true)
+  can_delete               Boolean @default(true)
+  can_view_performance     Boolean @default(true)
+  can_view_counsellor_work Boolean @default(true)
+  can_manage_settings      Boolean @default(true)
+
+  admin User @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+model Counsellor {
+  id                            Int      @id @default(autoincrement())
+  admin_id                      Int      @unique
+  employee_id                   String   @unique @db.VarChar(20)
+  department                    String   @default("") @db.VarChar(100)
+  joining_date                  DateTime @default(now()) @db.Date
+  is_active                     Boolean  @default(true)
+  can_handle_admission_followup Boolean  @default(false)
+  performance_rating            Decimal  @default(0) @db.Decimal(3, 2)
+  total_leads_assigned          Int      @default(0)
+  total_business_generated      Decimal  @default(0) @db.Decimal(12, 2)
+
+  admin                User                          @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+  leads                Lead[]                        @relation("LeadAssignedCounsellor")
+  previous_leads       Lead[]                        @relation("LeadPreviousCounsellor")
+  activities           LeadActivity[]
+  businesses           Business[]
+  notifications        NotificationCounsellor[]
+  transfers_from       LeadTransfer[]                @relation("TransferFrom")
+  transfers_to         LeadTransfer[]                @relation("TransferTo")
+  performance          CounsellorPerformance[]
+  daily_targets        DailyTargetAssignment[]
+  activity_freeze_logs CounsellorActivityFreezeLog[]
+  alternate_phones     LeadAlternatePhone[]
+  data_access_logs     DataAccessLog[]
+  admission_followups  AdmittedStudent[]
+  admission_activities AdmittedStudentActivity[]
+
+  @@index([is_active])
+  @@map("counsellors")
+}
+
+model CounsellorActivityFreezeLog {
+  id                   Int       @id @default(autoincrement())
+  counsellor_id        Int
+  frozen_at            DateTime  @default(now())
+  activities_in_window Int       @default(5) @db.SmallInt
+  window_seconds       Int       @default(120) @db.SmallInt
+  is_active            Boolean   @default(true)
+  unfrozen_at          DateTime?
+  unfrozen_by_id       Int?
+
+  counsellor  Counsellor @relation(fields: [counsellor_id], references: [id], onDelete: Cascade)
+  unfrozen_by User?      @relation(fields: [unfrozen_by_id], references: [id], onDelete: SetNull)
+
+  @@index([counsellor_id, is_active])
+  @@index([frozen_at])
+  @@map("counsellor_activity_freeze_logs")
+}
+
+model LeadSource {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  description String   @db.Text
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+
+  leads Lead[]
+
+  @@index([name])
+  @@map("lead_sources")
+}
+
+model LeadStatus {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String   @db.Text
+  color       String   @default("secondary") @db.VarChar(20)
+  is_active   Boolean  @default(true)
+  is_system   Boolean  @default(false)
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now())
+
+  @@map("lead_statuses")
+}
+
+model Lead {
+  id                     Int       @id @default(autoincrement())
+  lead_id                String    @unique @db.VarChar(20)
+  first_name             String    @db.VarChar(100)
+  last_name              String    @db.VarChar(100)
+  email                  String    @db.VarChar(254)
+  phone                  String    @db.VarChar(15)
+  alternate_phone        String    @default("") @db.VarChar(15)
+  school_name            String    @default("") @db.VarChar(200)
+  position               String    @default("") @db.VarChar(100)
+  graduation_status      String    @default("NO") @db.VarChar(3)
+  graduation_course      String    @default("Not Specified") @db.VarChar(200)
+  graduation_year        Int?
+  graduation_college     String    @default("Not Specified") @db.VarChar(200)
+  course_interested      String    @default("") @db.VarChar(200)
+  is_graduated           String    @default("NO") @db.VarChar(3)
+  industry               String    @default("") @db.VarChar(100)
+  source_id              Int
+  status                 String    @default("NEW") @db.VarChar(50)
+  priority               String    @default("MEDIUM") @db.VarChar(10)
+  assigned_counsellor_id Int?
+  previous_counsellor_id Int?
+  expected_value         Decimal   @default(0) @db.Decimal(12, 2)
+  actual_value           Decimal   @default(0) @db.Decimal(12, 2)
+  notes                  String    @db.Text
+  address                String    @db.Text
+  city                   String    @default("") @db.VarChar(100)
+  state                  String    @default("") @db.VarChar(100)
+  country                String    @default("") @db.VarChar(100)
+  postal_code            String    @default("") @db.VarChar(30)
+  website                String    @default("") @db.VarChar(200)
+  linkedin               String    @default("") @db.VarChar(200)
+  whatsapp_phone         String?   @db.VarChar(20)
+  preferred_language     String?   @db.VarChar(50)
+  source_campaign        String?   @db.VarChar(150)
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  last_contact_date      DateTime?
+  next_follow_up         DateTime?
+  conversion_score       Int?
+  enriched_job_title     String    @default("") @db.VarChar(150)
+  enrichment_notes       String    @db.Text
+  routed_to              String    @default("") @db.VarChar(100)
+  routing_reason         String    @db.Text
+
+  source              LeadSource           @relation(fields: [source_id], references: [id], onDelete: Restrict)
+  assigned_counsellor Counsellor?          @relation("LeadAssignedCounsellor", fields: [assigned_counsellor_id], references: [id], onDelete: SetNull)
+  previous_counsellor Counsellor?          @relation("LeadPreviousCounsellor", fields: [previous_counsellor_id], references: [id], onDelete: SetNull)
+  activities          LeadActivity[]
+  businesses          Business[]
+  alternate_phones    LeadAlternatePhone[]
+  transfers           LeadTransfer[]
+  data_access_logs    DataAccessLog[]
+  admission_followups AdmittedStudent[]
+  social_threads      SocialChatThread[]
+  academic_profile    LeadAcademicProfile?
+  exam_attempts       LeadExamAttempt[]
+  preference          LeadPreference?
+  counselling         LeadCounselling?
+  shortlist_entries   CollegeShortlistEntry[]
+  mba_applications    MbaApplication[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([phone])
+  @@index([created_at])
+  @@index([last_contact_date])
+  @@index([next_follow_up])
+  @@index([updated_at])
+  @@index([assigned_counsellor_id, status])
+  @@index([assigned_counsellor_id, last_contact_date, created_at])
+  @@index([source_id, status])
+  @@map("leads")
+}
+
+model LeadAlternatePhone {
+  id            Int      @id @default(autoincrement())
+  lead_id       Int
+  phone         String   @db.VarChar(20)
+  label         String   @default("") @db.VarChar(50)
+  created_by_id Int?
+  created_at    DateTime @default(now())
+
+  lead       Lead        @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  created_by Counsellor? @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+
+  @@index([created_at])
+  @@map("lead_alternate_phones")
+}
+
+model ActivityType {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique @db.VarChar(30)
+  name        String   @db.VarChar(100)
+  description String   @db.Text
+  icon        String   @default("fas fa-tasks") @db.VarChar(50)
+  color       String   @default("info") @db.VarChar(20)
+  is_active   Boolean  @default(true)
+  is_system   Boolean  @default(false)
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now())
+
+  @@map("activity_types")
+}
+
+model NextAction {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique @db.VarChar(30)
+  name        String   @db.VarChar(100)
+  description String   @db.Text
+  is_active   Boolean  @default(true)
+  is_system   Boolean  @default(false)
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now())
+
+  @@map("next_actions")
+}
+
+model LeadActivity {
+  id                 Int       @id @default(autoincrement())
+  lead_id            Int
+  counsellor_id      Int
+  activity_type      String    @db.VarChar(30)
+  subject            String    @db.VarChar(200)
+  description        String    @db.Text
+  outcome            String    @default("") @db.VarChar(200)
+  next_action        String    @default("") @db.VarChar(200)
+  scheduled_date     DateTime?
+  completed_date     DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  edited_at          DateTime?
+  logged_by_admin_id Int?
+  duration           Int       @default(0)
+  is_completed       Boolean   @default(true)
+
+  lead            Lead       @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  counsellor      Counsellor @relation(fields: [counsellor_id], references: [id], onDelete: Cascade)
+  logged_by_admin User?      @relation("ActivityLoggedByAdmin", fields: [logged_by_admin_id], references: [id], onDelete: SetNull)
+
+  @@index([activity_type])
+  @@index([scheduled_date])
+  @@index([completed_date])
+  @@index([is_completed])
+  @@index([next_action])
+  @@index([lead_id, completed_date])
+  @@index([counsellor_id, completed_date])
+  @@index([counsellor_id, is_completed, scheduled_date])
+  @@map("lead_activities")
+}
+
+model Business {
+  id            Int       @id @default(autoincrement())
+  lead_id       Int
+  counsellor_id Int
+  business_id   String    @unique @db.VarChar(32)
+  title         String    @db.VarChar(200)
+  description   String    @db.Text
+  value         Decimal   @db.Decimal(12, 2)
+  status        String    @default("PENDING") @db.VarChar(20)
+  start_date    DateTime  @db.Date
+  end_date      DateTime? @db.Date
+  payment_terms String    @db.Text
+  notes         String    @db.Text
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  lead             Lead            @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  counsellor       Counsellor      @relation(fields: [counsellor_id], references: [id], onDelete: Cascade)
+  data_access_logs DataAccessLog[]
+
+  @@index([status])
+  @@index([start_date])
+  @@index([created_at])
+  @@map("businesses")
+}
+
+model AdmittedStudent {
+  id                     Int       @id @default(autoincrement())
+  name                   String    @db.VarChar(200)
+  phone                  String    @db.VarChar(20)
+  course                 String    @db.VarChar(200)
+  lead_id                Int?
+  assigned_counsellor_id Int?
+  call_status            String    @default("NEW") @db.VarChar(20)
+  notes                  String    @db.Text
+  next_follow_up         DateTime?
+  fee_due_date           DateTime? @db.Date
+  documents_due_date     DateTime? @db.Date
+  last_called_at         DateTime?
+  created_by_id          Int?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+
+  lead                Lead?                     @relation(fields: [lead_id], references: [id], onDelete: SetNull)
+  assigned_counsellor Counsellor?               @relation(fields: [assigned_counsellor_id], references: [id], onDelete: SetNull)
+  created_by          User?                     @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+  remarks             AdmittedStudentRemark[]
+  activities          AdmittedStudentActivity[]
+
+  @@index([phone])
+  @@index([call_status])
+  @@index([next_follow_up])
+  @@index([fee_due_date])
+  @@index([documents_due_date])
+  @@index([created_at])
+  @@map("admitted_students")
+}
+
+model AdmittedStudentRemark {
+  id            Int      @id @default(autoincrement())
+  student_id    Int
+  remark        String   @db.Text
+  created_by_id Int?
+  created_at    DateTime @default(now())
+
+  student    AdmittedStudent @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  created_by User?           @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+
+  @@index([student_id, created_at])
+  @@map("admitted_student_remarks")
+}
+
+model AdmittedStudentActivity {
+  id                Int       @id @default(autoincrement())
+  student_id        Int
+  counsellor_id     Int?
+  activity_type     String    @db.VarChar(30)
+  subject           String    @db.VarChar(200)
+  description       String    @db.Text
+  scheduled_date    DateTime?
+  completed_date    DateTime?
+  is_completed      Boolean   @default(false)
+  is_auto_generated Boolean   @default(false)
+  created_by_id     Int?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  student    AdmittedStudent @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  counsellor Counsellor?     @relation(fields: [counsellor_id], references: [id], onDelete: SetNull)
+  created_by User?           @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+
+  @@index([activity_type])
+  @@index([scheduled_date])
+  @@index([completed_date])
+  @@index([is_completed])
+  @@index([counsellor_id, completed_date])
+  @@map("admitted_student_activities")
+}
+
+model NotificationCounsellor {
+  id            Int      @id @default(autoincrement())
+  counsellor_id Int
+  message       String   @db.Text
+  is_read       Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  counsellor Counsellor @relation(fields: [counsellor_id], references: [id], onDelete: Cascade)
+
+  @@index([counsellor_id, is_read])
+  @@index([created_at])
+  @@map("counsellor_notifications")
+}
+
+model NotificationAdmin {
+  id         Int      @id @default(autoincrement())
+  admin_id   Int?
+  message    String   @db.Text
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  admin User? @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@index([admin_id, is_read])
+  @@index([created_at])
+  @@map("admin_notifications")
+}
+
+model LeadTransfer {
+  id                 Int       @id @default(autoincrement())
+  lead_id            Int
+  from_counsellor_id Int
+  to_counsellor_id   Int
+  reason             String    @db.Text
+  admin_approved     Boolean   @default(false)
+  approved_by_id     Int?
+  created_at         DateTime  @default(now())
+  approved_at        DateTime?
+
+  lead            Lead       @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  from_counsellor Counsellor @relation("TransferFrom", fields: [from_counsellor_id], references: [id], onDelete: Cascade)
+  to_counsellor   Counsellor @relation("TransferTo", fields: [to_counsellor_id], references: [id], onDelete: Cascade)
+  approved_by     User?      @relation(fields: [approved_by_id], references: [id], onDelete: SetNull)
+
+  @@map("lead_transfers")
+}
+
+model CounsellorPerformance {
+  id                       Int      @id @default(autoincrement())
+  counsellor_id            Int
+  month                    DateTime @db.Date
+  total_leads_assigned     Int      @default(0)
+  total_leads_contacted    Int      @default(0)
+  total_leads_qualified    Int      @default(0)
+  total_business_generated Decimal  @default(0) @db.Decimal(12, 2)
+  conversion_rate          Decimal  @default(0) @db.Decimal(5, 2)
+  average_response_time    Int      @default(0)
+  created_at               DateTime @default(now())
+
+  counsellor Counsellor @relation(fields: [counsellor_id], references: [id], onDelete: Cascade)
+
+  @@unique([counsellor_id, month])
+  @@map("counsellor_performance")
+}
+
+model DataAccessLog {
+  id            Int      @id @default(autoincrement())
+  user_id       Int
+  counsellor_id Int?
+  action        String   @db.VarChar(50)
+  lead_id       Int?
+  business_id   Int?
+  ip_address    String?  @db.VarChar(45)
+  user_agent    String   @db.Text
+  created_at    DateTime @default(now())
+
+  user       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  counsellor Counsellor? @relation(fields: [counsellor_id], references: [id], onDelete: SetNull)
+  lead       Lead?       @relation(fields: [lead_id], references: [id], onDelete: SetNull)
+  business   Business?   @relation(fields: [business_id], references: [id], onDelete: SetNull)
+
+  @@index([action, created_at])
+  @@index([counsellor_id, created_at])
+  @@index([created_at])
+  @@map("data_access_logs")
+}
+
+model DailyTarget {
+  id            Int      @id @default(autoincrement())
+  target_date   DateTime @db.Date
+  target_count  Int
+  created_by_id Int?
+  created_at    DateTime @default(now())
+
+  created_by  User?                   @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+  assignments DailyTargetAssignment[]
+
+  @@unique([target_date], map: "daily_targets_target_date_key")
+  @@index([target_date])
+  @@map("daily_targets")
+}
+
+model DailyTargetAssignment {
+  id              Int      @id @default(autoincrement())
+  target_id       Int
+  counsellor_id   Int
+  completed_count Int      @default(0)
+  updated_at      DateTime @updatedAt
+
+  target     DailyTarget @relation(fields: [target_id], references: [id], onDelete: Cascade)
+  counsellor Counsellor  @relation(fields: [counsellor_id], references: [id], onDelete: Cascade)
+
+  @@unique([target_id, counsellor_id])
+  @@map("daily_target_assignments")
+}
+
+model MetaIntegrationSettings {
+  id                         Int      @id @default(1)
+  public_base_url            String   @default("") @db.VarChar(500)
+  verify_token               String   @default("") @db.VarChar(255)
+  app_secret                 String   @default("") @db.VarChar(255)
+  access_token               String   @db.Text
+  whatsapp_phone_number_id   String   @default("") @db.VarChar(64)
+  facebook_page_id           String   @default("") @db.VarChar(64)
+  whatsapp_enabled           Boolean  @default(false)
+  instagram_enabled          Boolean  @default(false)
+  facebook_messenger_enabled Boolean  @default(false)
+  notify_admins_on_message   Boolean  @default(true)
+  updated_at                 DateTime @updatedAt
+
+  @@map("meta_integration_settings")
+}
+
+model AiSensyIntegrationSettings {
+  id              Int      @id @default(1)
+  public_base_url String   @default("") @db.VarChar(500)
+  webhook_secret  String   @default("") @db.VarChar(255)
+  webhook_token   String   @default("") @db.VarChar(255)
+  enabled         Boolean  @default(true)
+  updated_at      DateTime @updatedAt
+
+  @@map("aisensy_integration_settings")
+}
+
+model SocialChatThread {
+  id                   Int      @id @default(autoincrement())
+  channel              String   @db.VarChar(20)
+  external_user_id     String   @db.VarChar(128)
+  page_or_waba_id      String   @default("") @db.VarChar(128)
+  display_name         String   @default("") @db.VarChar(200)
+  lead_id              Int?
+  last_message_at      DateTime @default(now())
+  last_message_preview String   @default("") @db.VarChar(300)
+  updated_at           DateTime @updatedAt
+
+  lead     Lead?               @relation(fields: [lead_id], references: [id], onDelete: SetNull)
+  messages SocialChatMessage[]
+
+  @@unique([channel, external_user_id, page_or_waba_id], map: "uniq_social_thread_channel_user_page")
+  @@index([channel, last_message_at])
+  @@index([last_message_at])
+  @@map("social_chat_threads")
+}
+
+model SocialChatMessage {
+  id                  Int      @id @default(autoincrement())
+  thread_id           Int
+  direction           String   @db.VarChar(3)
+  body                String   @db.Text
+  external_message_id String   @default("") @db.VarChar(128)
+  error_detail        String   @default("") @db.VarChar(500)
+  created_at          DateTime @default(now())
+
+  thread SocialChatThread @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+
+  @@index([thread_id, created_at])
+  @@index([direction])
+  @@map("social_chat_messages")
+}
+
+model LeadAcademicProfile {
+  id                       Int      @id @default(autoincrement())
+  lead_id                  Int      @unique
+  highest_qualification    String?  @db.VarChar(150)
+  grading_system           String?  @db.VarChar(20)
+  graduation_percentage    Decimal? @db.Decimal(5, 2)
+  graduation_cgpa          Decimal? @db.Decimal(4, 2)
+  cgpa_scale               Decimal? @db.Decimal(3, 1)
+  class10_percentage       Decimal? @db.Decimal(5, 2)
+  class12_percentage       Decimal? @db.Decimal(5, 2)
+  academic_gap_months      Int?
+  work_experience_months   Int?
+  employment_status        String?  @db.VarChar(40)
+  professional_background  String?  @db.Text
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+
+  lead Lead @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@map("lead_academic_profiles")
+}
+
+model EntranceExam {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique @db.VarChar(30)
+  name       String   @db.VarChar(100)
+  score_kind String   @default("MIXED") @db.VarChar(20)
+  is_active  Boolean  @default(true)
+  sort_order Int      @default(0)
+
+  attempts LeadExamAttempt[]
+
+  @@map("entrance_exams")
+}
+
+model LeadExamAttempt {
+  id                   Int       @id @default(autoincrement())
+  lead_id              Int
+  exam_id              Int
+  exam_year            Int?
+  admission_cycle      String?   @db.VarChar(20)
+  attempt_number       Int?
+  raw_score            Decimal?  @db.Decimal(8, 2)
+  scaled_score         Decimal?  @db.Decimal(8, 2)
+  percentile           Decimal?  @db.Decimal(5, 2)
+  registration_status  String?   @db.VarChar(40)
+  result_status        String?   @db.VarChar(40)
+  result_date          DateTime? @db.Date
+  verified             Boolean   @default(false)
+  verification_notes   String?   @db.Text
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  lead Lead         @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  exam EntranceExam @relation(fields: [exam_id], references: [id], onDelete: Restrict)
+
+  @@index([lead_id, exam_id])
+  @@index([exam_id])
+  @@map("lead_exam_attempts")
+}
+
+model LeadPreference {
+  id                  Int      @id @default(autoincrement())
+  lead_id             Int      @unique
+  program_type        String?  @db.VarChar(20)
+  fee_min             Decimal? @db.Decimal(12, 2)
+  fee_max             Decimal? @db.Decimal(12, 2)
+  budget_flexibility  String?  @db.VarChar(40)
+  willing_to_relocate String?  @db.VarChar(20)
+  hostel_preference   String?  @db.VarChar(20)
+  intake_year         Int?
+  notes               String?  @db.Text
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  lead              Lead                            @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  locations         LeadPreferenceLocation[]
+  specializations   LeadPreferenceSpecialization[]
+  college_categories LeadPreferenceCategory[]
+
+  @@map("lead_preferences")
+}
+
+model LeadPreferenceLocation {
+  id            Int    @id @default(autoincrement())
+  preference_id Int
+  location      String @db.VarChar(100)
+
+  preference LeadPreference @relation(fields: [preference_id], references: [id], onDelete: Cascade)
+
+  @@index([preference_id])
+  @@map("lead_preference_locations")
+}
+
+model LeadPreferenceSpecialization {
+  id            Int    @id @default(autoincrement())
+  preference_id Int
+  name          String @db.VarChar(100)
+
+  preference LeadPreference @relation(fields: [preference_id], references: [id], onDelete: Cascade)
+
+  @@index([preference_id])
+  @@map("lead_preference_specializations")
+}
+
+model LeadPreferenceCategory {
+  id            Int    @id @default(autoincrement())
+  preference_id Int
+  category      String @db.VarChar(100)
+
+  preference LeadPreference @relation(fields: [preference_id], references: [id], onDelete: Cascade)
+
+  @@index([preference_id])
+  @@map("lead_preference_categories")
+}
+
+model LeadCounselling {
+  id                       Int      @id @default(autoincrement())
+  lead_id                  Int      @unique
+  requirement              String?  @db.Text
+  main_objective           String?  @db.Text
+  budget_concerns          String?  @db.Text
+  location_constraints     String?  @db.Text
+  academic_concerns        String?  @db.Text
+  exam_concerns            String?  @db.Text
+  guardian_involvement     String?  @db.VarChar(20)
+  last_summary             String?  @db.Text
+  next_recommended_action  String?  @db.VarChar(200)
+  counsellor_remarks       String?  @db.Text
+  status_reason            String?  @db.Text
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+
+  lead Lead @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@map("lead_counselling")
+}
+
+model CollegeShortlistEntry {
+  id                   Int       @id @default(autoincrement())
+  lead_id              Int
+  college_name         String    @db.VarChar(200)
+  program_name         String?   @db.VarChar(200)
+  location             String?   @db.VarChar(150)
+  admission_cycle      String?   @db.VarChar(20)
+  accepted_exams       String?   @db.VarChar(300)
+  eligibility_notes    String?   @db.Text
+  fee_min              Decimal?  @db.Decimal(12, 2)
+  fee_max              Decimal?  @db.Decimal(12, 2)
+  preference_note      String?   @db.VarChar(200)
+  status               String    @default("CONSIDERING") @db.VarChar(30)
+  application_deadline DateTime? @db.Date
+  verification_status  String    @default("UNVERIFIED") @db.VarChar(20)
+  last_verified_at     DateTime?
+  notes                String?   @db.Text
+  created_by_id        Int?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  lead         Lead             @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  created_by   User?            @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+  applications MbaApplication[]
+
+  @@index([lead_id, status])
+  @@map("college_shortlist_entries")
+}
+
+model MbaApplication {
+  id                       Int       @id @default(autoincrement())
+  lead_id                  Int
+  shortlist_entry_id       Int?
+  college_name             String    @db.VarChar(200)
+  program_name             String?   @db.VarChar(200)
+  admission_cycle          String?   @db.VarChar(20)
+  status                   String    @default("NOT_STARTED") @db.VarChar(30)
+  application_reference    String?   @db.VarChar(80)
+  submitted_at             DateTime?
+  deadline                 DateTime? @db.Date
+  outstanding_requirements String?   @db.Text
+  offer_status             String?   @db.VarChar(30)
+  next_action              String?   @db.VarChar(200)
+  notes                    String?   @db.Text
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+
+  lead             Lead                   @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  shortlist_entry  CollegeShortlistEntry? @relation(fields: [shortlist_entry_id], references: [id], onDelete: SetNull)
+
+  @@index([lead_id, status])
+  @@index([shortlist_entry_id])
+  @@map("mba_applications")
+}
+
+model Session {
+  sid        String   @id @db.VarChar(128)
+  data       String   @db.MediumText
+  expires_at DateTime
+
+  @@index([expires_at])
+  @@map("sessions")
+}

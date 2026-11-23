@@ -1,0 +1,79 @@
+---
+description: Natural, project-consistent, maintainable engineering
+alwaysApply: true
+---
+
+# Maintainable Human-Engineered Code
+
+## 1. Follow the Codebase's Existing Style
+
+- Inspect neighboring files before implementing a feature.
+- Match established naming, formatting, import ordering, and file structure.
+- Follow existing patterns unless there is a concrete reason to improve them.
+- Keep related modules consistent.
+- Avoid introducing a different coding style for every new feature.
+
+## 2. Write Clear, Purposeful Code
+
+- Choose names that express domain meaning and intent.
+- Prefer straightforward control flow over clever abstractions.
+- Keep functions focused on coherent responsibilities.
+- Use the simplest implementation that correctly satisfies the requirement.
+- Avoid unnecessary wrappers, factories, managers, and service layers.
+- Avoid splitting trivial expressions into excessive helper functions.
+- Avoid extremely large functions when meaningful decomposition improves clarity.
+- Prefer explicit business rules over hidden or surprising behavior.
+
+## 3. Comments and Documentation
+
+- Explain non-obvious business rules and important trade-offs.
+- Document surprising constraints, concurrency assumptions, and invariants.
+- Explain why a complicated implementation is necessary when the reason
+  would not be apparent to another engineer.
+- Do not add comments that merely repeat the code.
+- Do not add generic AI-style introductory comments to every function.
+- Do not add TODO comments unless they identify a genuine unresolved task.
+- Remove outdated comments when changing the behavior they describe.
+- Keep documentation aligned with actual implementation.
+
+## 4. Avoid Common Code-Generation Anti-Patterns
+
+Do not introduce these patterns without a concrete justification:
+
+- Duplicated components and business logic.
+- Generic utility functions used only once without a meaningful benefit.
+- Excessive defensive checks for impossible states.
+- Broad catch blocks that suppress errors.
+- Silent fallbacks that conceal broken configuration.
+- Unnecessary useMemo, useCallback, or useEffect.
+- Unsafe any types and widespread type assertions.
+- Hardcoded configuration values scattered across files.
+- Large route handlers mixing unrelated concerns.
+- Overly generic abstractions that make simple behavior difficult to trace.
+- Excessive comments, decorative section dividers, or redundant documentation.
+- Unnecessary dependencies for trivial functionality.
+- Placeholder implementations presented as production-ready.
+- Unused variables, imports, unreachable code, or abandoned alternatives.
+
+## 5. Be Consistent, Not Artificially Uniform
+
+- Follow existing conventions even if another style is also valid.
+- Do not refactor unrelated code just to make it look more uniform.
+- Allow different modules to have different abstractions when their
+  responsibilities genuinely differ.
+- Avoid introducing a single universal pattern for every problem.
+- Keep abstractions proportional to actual complexity.
+
+## 6. Evidence-Based Engineering
+
+- Never invent benchmark results, test results, security guarantees,
+  or migration verification.
+- Do not claim a design is scalable without considering actual constraints.
+- Prefer small, verifiable improvements over sweeping speculative rewrites.
+- Explain non-obvious architectural decisions.
+- Identify uncertainty instead of concealing it with confident language.
+- Optimize for the next developer who must debug, extend, and maintain
+  this codebase.
+
+The final code should look like a coherent continuation of the existing
+project, with clear reasoning behind any deliberate improvements.

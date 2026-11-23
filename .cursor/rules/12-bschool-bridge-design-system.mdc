@@ -1,0 +1,66 @@
+---
+description: Bschool Bridge brand consistency and education-product UX
+alwaysApply: true
+---
+
+# Bschool Bridge Design Standards
+
+## Existing Design System
+
+- Inspect the current design system and actual component implementations.
+- Reuse existing typography, spacing, colors, layouts, and components.
+- Preserve the existing visual identity.
+- Do not introduce an unrelated theme or component library.
+- Do not redesign existing pages without a specific requirement.
+
+## Brand Palette
+
+The established brand palette includes:
+
+- Electric Cobalt: #3157E8
+- Deep Indigo: #18204A
+- Mint: #35C7A5
+- Coral: #FF7A6B
+- Warm Ivory: #F8F8F4
+
+First verify how these colors are currently implemented.
+Reuse existing design tokens rather than duplicating raw values.
+Do not force these colors into components where the existing design
+system intentionally uses another semantic color.
+
+## Product Experience
+
+Keep the existing user journeys consistent across:
+
+- College discovery.
+- College search and filtering.
+- College profile pages.
+- Program comparison.
+- MBA profile evaluation.
+- College prediction.
+- Saved colleges and student dashboards.
+- Application tracking and relevant resources.
+
+These are product areas to preserve where implemented, not permission
+to invent new features or replace existing workflows.
+
+## Trust and Clarity
+
+- Display source and admission-cycle information where appropriate.
+- Distinguish official facts from estimates and recommendations.
+- Make eligibility requirements understandable.
+- Explain prediction limitations clearly.
+- Use informative empty, loading, and error states.
+- Avoid fabricated reviews, testimonials, rankings, and placement claims.
+- Avoid deceptive urgency or guaranteed-admission messaging.
+- Make important actions and next steps easy to understand.
+
+## Visual Quality
+
+- Prefer clear information hierarchy over decorative complexity.
+- Use consistent layouts for college cards, statistics, filters,
+  comparison tables, and predictor results.
+- Avoid generic dashboard templates that conflict with the existing site.
+- Avoid unnecessary gradients, animations, and decorative cards.
+- Preserve accessibility, responsive behavior, and keyboard navigation.
+- Ensure that design changes do not compromise functionality.

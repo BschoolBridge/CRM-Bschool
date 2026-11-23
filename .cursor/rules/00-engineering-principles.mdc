@@ -1,0 +1,160 @@
+---
+description: Core engineering standards for the CRM Portal
+alwaysApply: true
+---
+
+# Senior Software Engineering Principles
+
+Act as a senior software engineer responsible for the long-term
+reliability, security, performance, and maintainability of this CRM.
+
+## 1. Understand Before Changing
+
+- Inspect the existing project structure before making changes.
+- Read package.json, TypeScript configuration, framework configuration,
+  environment variable conventions, and existing documentation.
+- Identify the existing architecture, design system, database access
+  layer, authentication flow, authorization rules, and testing setup.
+- Search for existing implementations before creating new ones.
+- Trace the complete execution path of a feature before modifying it.
+- Understand how the affected code is used by other modules.
+- Ask for clarification when a business requirement is ambiguous.
+- Never invent existing APIs, models, fields, routes, or business rules.
+- Do not assume the current implementation matches the old Django
+  implementation without checking available evidence.
+
+## 2. Preserve Existing Functionality
+
+- Treat all existing, working functionality as a compatibility contract.
+- Make the smallest change that correctly solves the problem.
+- Do not remove, rename, replace, or redesign existing functionality
+  without a clear requirement.
+- Preserve business rules, validation, permissions, relationships,
+  workflows, and error handling.
+- Check for side effects across all affected modules.
+- Never silently change API response formats, database semantics,
+  or user-visible behavior.
+- Do not introduce breaking changes without explicit justification.
+- When modifying shared code, identify and test its consumers.
+
+## 3. Reuse Before Creating
+
+Before introducing a new implementation, search for:
+
+- Existing database models and types.
+- Shared utilities and service functions.
+- Reusable UI components.
+- Existing form controls, tables, dialogs, and notifications.
+- Existing validation schemas.
+- Authentication and authorization helpers.
+- Existing API handlers and repository methods.
+- Existing logging, error handling, and testing utilities.
+
+Extend existing abstractions when appropriate.
+
+Do not create duplicate components, utilities, services, or models
+merely because a new implementation seems more convenient.
+
+Do not force unrelated functionality into an abstraction simply
+to increase code reuse.
+
+## 4. Engineering Priorities
+
+Prioritize these qualities in order:
+
+1. Correctness and preservation of business requirements.
+2. Security and authorization.
+3. Data integrity and consistency.
+4. Reliability and error handling.
+5. Maintainability and clarity.
+6. Performance and scalability.
+7. Consistency with the existing design system.
+8. Minimal implementation complexity.
+
+Do not sacrifice correctness or security for superficial simplicity.
+
+## 5. Scope Control
+
+- Do not rewrite the entire application to implement a small feature.
+- Do not refactor unrelated modules during a targeted fix.
+- Avoid introducing dependencies without a clear benefit.
+- Do not change frameworks or architectural patterns without justification.
+- Do not add unnecessary abstractions, factories, wrappers, or layers.
+- Do not remove code merely because it appears unused without checking
+  dynamic imports, route references, framework conventions, and consumers.
+- Do not overwrite user changes or unrelated work.
+- Never perform destructive database operations without explicit
+  authorization and a verified recovery plan.
+
+## 6. Definition of Done
+
+A change is complete only when:
+
+- Its behavior satisfies the requirement.
+- Relevant existing functionality remains intact.
+- Security and authorization implications have been checked.
+- Database changes preserve data integrity.
+- Appropriate tests have been added or updated.
+- Relevant linting, type checks, and tests have been run.
+- No known critical regression remains.
+- The final response accurately describes changes, test results,
+  unresolved issues, and any necessary follow-up.
+
+Never claim that a test passed unless it was actually executed
+successfully.
+
+## 7. Mandatory Implementation Workflow
+
+For every non-trivial task, follow this sequence.
+
+### Phase 1: Understand
+
+1. Read the relevant source files and existing project conventions.
+2. Identify the affected pages, routes, services, models, and components.
+3. Trace the data flow from the UI to the database and back.
+4. Identify business rules, permissions, and dependencies.
+5. Determine whether existing code can be reused.
+
+### Phase 2: Plan
+
+1. Define the smallest correct implementation.
+2. Identify potential security and data-integrity risks.
+3. Identify the tests required to verify the change.
+4. Identify any migration or backward-compatibility concerns.
+5. State assumptions and unresolved questions.
+
+For small, unambiguous changes, keep planning lightweight.
+For security-sensitive or architectural changes, provide a more detailed plan.
+
+### Phase 3: Implement
+
+1. Follow the established architecture and design system.
+2. Reuse existing models, components, utilities, and validation schemas.
+3. Implement server-side validation and authorization.
+4. Preserve existing functionality and API contracts.
+5. Avoid unrelated refactoring.
+6. Add or update relevant tests.
+
+### Phase 4: Verify
+
+1. Review the final diff.
+2. Run relevant tests and quality checks.
+3. Verify authorization and failure scenarios.
+4. Check database integrity and query behavior where applicable.
+5. Check affected UI states and existing workflows.
+6. Fix regressions introduced by the change.
+
+### Phase 5: Report
+
+Summarize:
+
+- What changed and why.
+- Which existing components or services were reused.
+- Any database or architectural changes.
+- Security considerations addressed.
+- Tests and commands actually executed.
+- Results of those tests.
+- Remaining risks or unresolved issues.
+
+Do not mark a task as fully verified when required checks
+could not be completed.

@@ -1,0 +1,116 @@
+---
+description: Security, authentication, authorization, and data protection
+alwaysApply: true
+---
+
+# Security Engineering Standards
+
+## 1. Security-First Changes
+
+- Treat all user input, query parameters, request bodies, headers,
+  uploaded files, and external responses as untrusted.
+- Inspect the existing authentication and authorization architecture
+  before modifying it.
+- Preserve existing security controls unless a verified replacement
+  provides equivalent or stronger protection.
+- Never disable a security control merely to make a feature work.
+- Follow applicable OWASP guidance and the framework's security guidance.
+- Prefer established, maintained security libraries over custom cryptography.
+
+## 2. Authentication
+
+- Reuse the existing authentication mechanism.
+- Never invent a parallel authentication system unnecessarily.
+- Validate sessions or tokens on the server.
+- Verify session expiration, revocation, and refresh behavior where applicable.
+- Protect session cookies with appropriate Secure, HttpOnly, and
+  SameSite settings.
+- Use secure password hashing through a suitable established library.
+- Never store plaintext passwords.
+- Never trust a user ID supplied by the browser as proof of identity.
+- Ensure logout and credential changes invalidate relevant sessions
+  according to the application's security requirements.
+
+## 3. Authorization and RBAC
+
+- Enforce authorization on the server for every protected operation.
+- Never rely solely on hidden buttons, disabled fields, or client-side checks.
+- Reuse the project's existing roles, permissions, and policy helpers.
+- Verify both action-level permissions and record-level access.
+- Enforce ownership, assignment, department, and tenant boundaries
+  wherever the business model requires them.
+- Deny access by default when permission cannot be established.
+- Prevent insecure direct object reference vulnerabilities.
+- Verify authorization independently for reads, creates, updates,
+  deletes, exports, uploads, and administrative operations.
+- Prevent privilege escalation and unauthorized role changes.
+- Do not allow users to update protected fields through mass assignment.
+
+## 4. Input Validation
+
+- Validate all untrusted input at server boundaries.
+- Use existing schemas or validation utilities where available.
+- Validate types, lengths, ranges, formats, and allowed values.
+- Reject invalid identifiers and malformed payloads.
+- Apply appropriate normalization without changing valid business data.
+- Validate uploaded files by size, permitted type, and actual content
+  where appropriate.
+- Treat client-side validation as a usability feature, not a security boundary.
+- Use parameterized database operations to prevent SQL injection.
+
+## 5. Browser and Application Security
+
+- Prevent cross-site scripting through context-appropriate output handling.
+- Avoid unsafe HTML rendering.
+- Protect state-changing operations against CSRF when the authentication
+  and request architecture requires it.
+- Configure CORS narrowly when cross-origin access is necessary.
+- Apply rate limiting to sensitive endpoints and abuse-prone operations.
+- Use appropriate security headers and a carefully tested CSP.
+- Avoid open redirects and unsafe URL handling.
+- Protect file downloads and document previews with server-side checks.
+- Do not expose internal errors, database details, or sensitive metadata.
+- Prevent sensitive information from entering URLs, analytics, or logs.
+
+## 6. Secrets and Environment Variables
+
+- Never hardcode passwords, API keys, database credentials, or private keys.
+- Never expose server secrets through NEXT_PUBLIC_ variables.
+- Reuse the project's environment-variable validation conventions.
+- Keep example environment files limited to placeholder values.
+- Never print secret values during debugging or testing.
+- Do not commit .env files containing real credentials.
+- If a secret is exposed, recommend rotation and investigate its usage.
+- Do not reproduce credentials in generated documentation or responses.
+
+## 7. Personal and Business Data
+
+- Return only the fields required by the requesting user and operation.
+- Protect contact information, financial information, and internal notes.
+- Restrict bulk exports to authorized roles.
+- Ensure list endpoints enforce the same record-access rules as detail pages.
+- Avoid leaking sensitive information through error messages.
+- Avoid logging full request bodies containing personal data.
+- Preserve audit history where required.
+- Apply retention and deletion rules according to the business requirements.
+
+## 8. Security Review
+
+For each security-relevant change, consider:
+
+- Broken access control.
+- Authentication and session weaknesses.
+- SQL injection.
+- Cross-site scripting.
+- CSRF where applicable.
+- SSRF where external resource fetching exists.
+- Path traversal and unsafe file access.
+- Mass assignment.
+- Sensitive-data exposure.
+- Race conditions.
+- Rate-limit bypass.
+- Insecure configuration.
+- Dependency vulnerabilities.
+
+Do not claim the application is completely secure.
+Document verified protections, identified risks, and unresolved issues.

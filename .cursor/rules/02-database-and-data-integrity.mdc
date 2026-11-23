@@ -1,0 +1,109 @@
+---
+description: MariaDB access, schema integrity, and data migration safety
+alwaysApply: true
+---
+
+# Database Engineering Standards
+
+## 1. Inspect Before Designing
+
+- Inspect the existing MariaDB schema, ORM or database driver,
+  connection configuration, and repository implementations.
+- Identify the actual database models and relationships.
+- Inspect existing migration files and schema history.
+- Reuse existing models, types, and database access abstractions.
+- Do not introduce a second ORM or database client without justification.
+- Never assume Django field types map directly to the new schema.
+- Verify defaults, nullability, unique constraints, indexes,
+  foreign keys, and deletion behavior.
+
+## 2. Data Integrity
+
+- Preserve primary keys, foreign keys, and relationship semantics.
+- Preserve uniqueness and required-field constraints.
+- Use appropriate decimal types for monetary values.
+- Handle dates, timestamps, time zones, and null values consistently.
+- Preserve audit fields and business-critical metadata.
+- Define deletion and archival behavior explicitly.
+- Never silently discard, truncate, or reinterpret existing data.
+- Do not use destructive synchronization or schema reset commands
+  against a populated database.
+- Never assume that a successful connection means the schema is correct.
+
+## 3. Queries and Transactions
+
+- Use parameterized queries or the existing ORM's safe query interface.
+- Never construct SQL using untrusted string concatenation.
+- Use transactions for operations that must succeed or fail together.
+- Use appropriate locking or concurrency controls for critical updates.
+- Handle duplicate submissions and retry scenarios where necessary.
+- Avoid N+1 query patterns.
+- Fetch only the fields and rows required.
+- Use pagination for potentially large result sets.
+- Verify query plans before adding indexes for expensive queries.
+- Do not introduce unnecessary indexes that slow writes.
+- Keep transactions short and avoid unrelated network calls inside them.
+
+## 4. Connection Management
+
+- Reuse the established connection pool and database client.
+- Do not open an unmanaged connection for every request.
+- Ensure connection limits are compatible with the deployment model.
+- Never expose database credentials to browser code.
+- Keep connection strings and secrets in server-side environment variables.
+- Do not log connection strings containing credentials.
+- Handle timeouts and connection failures predictably.
+
+## 5. Migration Safety
+
+For every schema change:
+
+1. Inspect current schema and migration history.
+2. Determine the impact on existing records and application code.
+3. Prefer backward-compatible, incremental changes.
+4. Add appropriate constraints and indexes.
+5. Plan data backfills where required.
+6. Verify migration behavior against a disposable test database.
+7. Provide a recovery or rollback strategy when feasible.
+8. Check application compatibility before removing old fields.
+9. Verify the final schema and affected application workflows.
+
+Never reset, drop, or recreate a production database to resolve
+a migration issue.
+
+Do not run destructive migrations against production without
+explicit authorization.
+
+## 6. Django Migration Compatibility
+
+When migrating an existing Django feature:
+
+- Inspect the original model definitions when available.
+- Preserve choices, defaults, validation, and field constraints.
+- Check ForeignKey, OneToOneField, and ManyToManyField semantics.
+- Preserve relevant model methods and business logic.
+- Check signals, managers, and overridden save/delete methods.
+- Review transactions, permission checks, and audit behavior.
+- Inspect Django migrations for schema changes and historical context.
+- Compare representative old and new records where access is available.
+
+Do not assume the new Next.js application automatically preserves
+Django model validation or signals.
+
+## 7. Data Verification
+
+For data migration or synchronization, validate:
+
+- Total record counts.
+- Primary-key uniqueness.
+- Foreign-key consistency.
+- Null and default distributions.
+- Enum or choice value mappings.
+- Monetary precision.
+- Date and timestamp conversion.
+- Relationships and many-to-many associations.
+- File references and uploaded-document metadata.
+- Representative business workflows.
+
+Never report successful migration merely because the script exited
+without an error.

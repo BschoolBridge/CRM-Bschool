@@ -1,0 +1,59 @@
+---
+description: CRM business logic and workflow preservation
+alwaysApply: true
+---
+
+# CRM Business Logic Protection
+
+## 1. Preserve Existing Workflows
+
+- Treat existing CRM workflows as business-critical.
+- Inspect the current implementation before changing lead, student,
+  counsellor, administrator, fee, or reporting functionality.
+- Do not assume that similarly named fields have identical meanings.
+- Preserve status transitions, assignment rules, validation, and audit history.
+- Do not invent business rules that are not supported by the codebase
+  or confirmed requirements.
+
+## 2. Lead and Record Management
+
+When working with leads or related records:
+
+- Preserve existing assignment and reassignment behavior.
+- Verify that only authorized users can change restricted records.
+- Preserve search, filtering, pagination, and sorting behavior.
+- Validate status transitions and required fields.
+- Prevent accidental duplicate records where the business rules require it.
+- Preserve relationships between leads, students, counsellors, and users.
+- Check concurrent updates to prevent lost or inconsistent changes.
+
+These requirements apply only where the corresponding functionality
+exists in the application.
+
+## 3. Roles and Permissions
+
+- Discover actual roles and permissions from the existing codebase.
+- Do not assume that role names imply particular permissions.
+- Document the verified permission matrix.
+- Enforce permissions on the server.
+- Preserve record-level access restrictions.
+- Do not expand access merely to simplify implementation.
+
+## 4. Auditability
+
+- Preserve existing audit fields and history.
+- Record important changes according to established application behavior.
+- Never fabricate audit entries.
+- Avoid allowing users to modify protected audit fields.
+- Preserve timestamps and actor attribution where required.
+
+## 5. Migration Compatibility
+
+- Compare migrated behavior with the original Django implementation
+  wherever the source code and reliable reference behavior are available.
+- Identify differences in validation, defaults, relationships, permissions,
+  and transaction behavior.
+- Document intentional changes.
+- Do not silently reintroduce old defects or remove existing business rules.
+- Report behaviors that cannot be verified because reference information
+  is unavailable.

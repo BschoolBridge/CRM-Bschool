@@ -1,0 +1,69 @@
+---
+description: Data quality and integrity for Indian MBA and PGDM institutions
+alwaysApply: true
+---
+
+# Bschool Bridge College Data Standards
+
+## Source of Truth
+
+- Inspect the existing college, institution, program, and admission-cycle
+  models before introducing new data structures.
+- Reuse existing models and repositories wherever appropriate.
+- Prefer official institution websites, admission brochures, official
+  examination authorities, and official regulatory sources.
+- Preserve the source URL, source type, retrieval timestamp, verification
+  status, and applicable admission cycle for important admission claims.
+- Never invent college details, eligibility criteria, fees, placements,
+  cutoffs, accreditation, rankings, or admission requirements.
+- Distinguish verified facts from estimates and unverified information.
+- Treat LLM-extracted information as unverified until it passes the
+  project's established verification process.
+
+## Admission-Cycle Versioning
+
+- Associate time-sensitive admission data with the relevant admission cycle.
+- Preserve historical data when a new admission cycle becomes available.
+- Do not overwrite historical cutoffs or fees with current values.
+- Distinguish the publication date from the admission cycle.
+- Track when records were last verified.
+- Represent unavailable information explicitly.
+- Never substitute a missing value with zero or an invented estimate.
+- Avoid treating outdated information as current.
+
+## Data Validation
+
+Validate:
+
+- Institution and program identity.
+- Duplicate records and aliases.
+- Entrance examinations accepted.
+- Eligibility requirements and academic thresholds.
+- Sectional and overall examination cutoffs.
+- Fees, placement statistics, and their reporting periods.
+- Program-specific admission criteria.
+- Application deadlines and official source references.
+
+Use suitable constraints and validation rules to prevent inconsistent data.
+
+## Data Ingestion
+
+- Reuse the existing ingestion pipeline and verification workflow.
+- Validate extracted data before persistence.
+- Make ingestion safe to retry.
+- Avoid duplicate records during repeated imports.
+- Log failed imports without exposing sensitive information.
+- Preserve the provenance of imported data.
+- Respect source licensing, access restrictions, and applicable terms.
+- Never present scraped or AI-extracted information as verified
+  merely because it was successfully stored.
+
+## Data Integrity Review
+
+Before modifying college data models or ingestion code:
+
+1. Inspect existing models and relationships.
+2. Identify affected imports, APIs, and UI consumers.
+3. Check historical-data compatibility.
+4. Add appropriate validation and regression tests.
+5. Verify that previously stored records remain accessible.

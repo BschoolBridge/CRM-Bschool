@@ -1,0 +1,93 @@
+---
+description: Testing strategy, regression prevention, and quality gates
+alwaysApply: true
+---
+
+# Testing and Quality Assurance
+
+## 1. Discover Existing Testing Infrastructure
+
+Before adding tests:
+
+- Inspect package.json and available test scripts.
+- Identify the existing unit, integration, and end-to-end frameworks.
+- Reuse established test utilities and fixtures.
+- Follow existing naming and directory conventions.
+- Do not introduce a second testing framework without justification.
+
+## 2. Test the Behavior
+
+- Write tests for important new behavior and bug fixes.
+- Prefer testing observable behavior over private implementation details.
+- Cover successful operations and relevant failure paths.
+- Include boundary cases and malformed input.
+- Test authorization failures as well as authorized access.
+- Test data validation and persistence.
+- Test transaction rollback where relevant.
+- Test concurrency or duplicate submissions for critical operations.
+- Add regression tests for previously identified bugs.
+
+## 3. CRM Regression Coverage
+
+For affected workflows, consider:
+
+- Login and logout.
+- Role and permission enforcement.
+- Lead creation and editing.
+- Lead assignment and reassignment.
+- Search, filtering, and pagination.
+- Student or applicant records.
+- Counsellor and administrator workflows.
+- Fee or payment-related records.
+- Document upload and download.
+- Data exports.
+- Audit history.
+- Deletion, archival, and recovery behavior.
+
+Only test workflows relevant to the feature being changed, while
+retaining appropriate coverage for critical shared functionality.
+
+## 4. Database Testing
+
+- Use an isolated test database or disposable database environment.
+- Do not run destructive tests against production.
+- Verify schema constraints and relationship behavior.
+- Test migrations against representative data where possible.
+- Check transaction rollback and consistency.
+- Clean up test data reliably.
+- Avoid tests that depend on execution order.
+- Do not assume mocked database behavior proves real database correctness.
+
+## 5. Required Quality Checks
+
+Run the relevant available commands for:
+
+- Linting.
+- TypeScript type checking.
+- Unit tests.
+- Integration tests.
+- Build verification.
+- End-to-end tests where configured.
+- Dependency or security checks when available.
+
+Inspect package scripts before choosing commands.
+
+Do not invent test commands or claim checks were run when they were not.
+
+If a command fails:
+
+1. Identify whether the failure is related to the change.
+2. Investigate the root cause.
+3. Fix regressions introduced by the change.
+4. Rerun the relevant checks.
+5. Document unrelated pre-existing failures honestly.
+
+## 6. Test Quality
+
+- Avoid meaningless tests that assert only that a value exists.
+- Avoid excessive mocking that bypasses the behavior being tested.
+- Do not weaken existing assertions to make tests pass.
+- Do not delete failing tests without understanding their purpose.
+- Do not modify production behavior solely to satisfy an incorrect test.
+- Prefer deterministic tests and explicit test data.
+- Ensure security tests verify that unauthorized operations are rejected.

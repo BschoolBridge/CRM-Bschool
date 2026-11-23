@@ -1,0 +1,102 @@
+---
+description: Correctness, transparency, and validation of MBA admission predictions
+alwaysApply: true
+---
+
+# Profile Evaluator and College Predictor
+
+## 1. Separate Different Questions
+
+Never treat the following as interchangeable:
+
+- Minimum eligibility.
+- Entrance-exam cutoff requirements.
+- Published admission scoring criteria.
+- Interview-call or shortlist likelihood.
+- Final admission likelihood.
+
+Each output must have a clearly defined meaning.
+
+## 2. Eligibility Evaluation
+
+- Implement eligibility checks using explicit, testable business rules.
+- Use the relevant institution, program, examination, and admission cycle.
+- Validate academic requirements and entrance-exam requirements separately.
+- Handle sectional cutoffs when applicable.
+- Handle category-specific requirements only when supported by
+  authoritative, cycle-specific information.
+- Distinguish confirmed ineligibility from missing information.
+- Do not infer eligibility from an overall percentile alone.
+- Never describe an eligible candidate as guaranteed admission.
+
+## 3. Scoring and Predictions
+
+- Inspect the existing prediction logic before modifying it.
+- Reuse established scoring rules where they remain correct.
+- Separate deterministic calculations from statistical predictions.
+- Keep business rules outside UI components.
+- Make scoring inputs, weights, thresholds, and assumptions explicit.
+- Version scoring configurations where results depend on changing rules.
+- Do not invent weights or admission probabilities without a defensible basis.
+- Do not describe arbitrary rule-based scores as calibrated probabilities.
+- Do not claim predictive accuracy without appropriate evaluation evidence.
+
+## 4. Explainability
+
+Where appropriate, results should explain:
+
+- Which profile factors influenced the result.
+- Which published criteria were applied.
+- Which admission-cycle data was used.
+- Which requirements are satisfied or unmet.
+- Which important data points are unavailable.
+- Why a recommendation was classified into a particular category.
+- Which assumptions or limitations affect the result.
+
+Use the project's existing result categories and UI conventions.
+
+Do not silently change scoring thresholds or recommendation labels.
+
+## 5. Statistical Model Requirements
+
+If a statistical prediction model exists:
+
+- Inspect its features, training data, validation strategy, and outputs.
+- Prevent target leakage.
+- Evaluate calibration and relevant performance metrics.
+- Test performance across sufficiently represented groups where appropriate.
+- Account for differences between admission cycles.
+- Record the model version and prediction timestamp.
+- Do not use training-set performance as proof of real-world accuracy.
+- Do not expose private training records through predictions or logs.
+
+If reliable historical outcomes are unavailable, do not manufacture them.
+Use clearly labeled rules-based assessments until adequate evidence exists.
+
+## 6. Output Integrity
+
+- Never guarantee admission.
+- Distinguish an indicative assessment from an official decision.
+- Do not display false precision in predicted probabilities.
+- Explain when insufficient data prevents a reliable assessment.
+- Avoid presenting missing or outdated college information as current.
+- Preserve the distinction between an ambitious option, a potential match,
+  and a safer option when those categories are supported by the logic.
+- Treat recommendations as decision support, not official admission advice.
+
+## 7. Testing
+
+Add tests for:
+
+- Boundary values and invalid inputs.
+- Eligibility requirements.
+- Sectional and overall cutoffs.
+- Category-specific criteria where applicable.
+- Missing and outdated college data.
+- Admission-cycle changes.
+- Scoring calculations.
+- Recommendation classification.
+- Prediction output validation.
+- Regression cases for previously supported profiles.
+
+Every scoring change must include tests demonstrating the intended behavior.
