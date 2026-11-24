@@ -4,7 +4,7 @@ import { extractCleanPhone } from "../../src/lib/phone";
 import { prisma } from "../../src/lib/prisma";
 import { homeFor, sessionAuthHash, USER_TYPE_ADMIN } from "../../src/server/auth";
 import { flash } from "../../src/server/flash";
-import { clientIp, tooManyAttempts } from "../../src/server/request";
+import { clientIp, redirectTo, tooManyAttempts } from "../../src/server/request";
 import { createSession } from "../../src/server/session";
 
 export const dynamic = "force-dynamic";
@@ -50,13 +50,13 @@ export async function POST(request: Request) {
       });
     }
     await flash("error", "Invalid details");
-    return NextResponse.redirect(new URL("/", request.url));
+    return redirectTo("/", request);
   }
 
   const home = homeFor(user.user_type);
   if (!home) {
     await flash("error", "Invalid user type");
-    return NextResponse.redirect(new URL("/", request.url));
+    return redirectTo("/", request);
   }
 
   const previousLogin = user.last_login;
@@ -69,5 +69,5 @@ export async function POST(request: Request) {
       ? { adminLoginSince: previousLogin ? previousLogin.toISOString() : null, showWebsiteLeadsLoginAlert: true }
       : {}),
   });
-  return NextResponse.redirect(new URL(home, request.url));
+  return redirectTo(home, request);
 }

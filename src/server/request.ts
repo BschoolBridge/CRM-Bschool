@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { NextResponse } from "next/server";
 import { config } from "../config/env";
 import { intId } from "../http/params";
 import { cache } from "../lib/cache";
@@ -81,4 +82,50 @@ export function headerSource(headerList: Headers) {
       return headerList.get(name);
     },
   };
+}
+
+function isBindAllHost(hostname: string): boolean {
+  const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  return host === "0.0.0.0" || host === "::" || host === "::0";
+}
+
+/**
+ * Public site origin for redirects. Hostinger (and similar) Node runtimes bind to
+ * 0.0.0.0:3000, so `request.url` is not a browser-reachable base — prefer SITE_URL.
+ */
+export function publicOrigin(request: Request): string {
+  const configured = config.siteUrl?.trim();
+  if (configured) {
+    try {
+      return new URL(configured.includes("://") ? configured : `https://${configured}`).origin;
+    } catch {
+      /* fall through */
+    }
+  }
+
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const hostHeader = forwardedHost || request.headers.get("host")?.trim() || "";
+  let hostname = "";
+  if (hostHeader) {
+    try {
+      hostname = new URL(`http://${hostHeader}`).hostname;
+    } catch {
+      hostname = hostHeader;
+    }
+  }
+  if (hostHeader && !isBindAllHost(hostname)) {
+    const proto =
+      request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
+      (config.useHttps ? "https" : new URL(request.url).protocol.replace(":", "") || "http");
+    return `${proto}://${hostHeader}`;
+  }
+
+  const fallback = new URL(request.url);
+  if (isBindAllHost(fallback.hostname)) fallback.hostname = "127.0.0.1";
+  return fallback.origin;
+}
+
+/** Absolute redirect that stays on the public hostname (not the Node bind address). */
+export function redirectTo(path: string, request: Request): NextResponse {
+  return NextResponse.redirect(new URL(path, `${publicOrigin(request)}/`));
 }

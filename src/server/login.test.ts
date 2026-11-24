@@ -29,10 +29,14 @@ vi.mock("./session", () => ({
   },
 }));
 
-vi.mock("./request", () => ({
-  clientIp: async () => "direct",
-  tooManyAttempts: async () => false,
-}));
+vi.mock("./request", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./request")>();
+  return {
+    ...actual,
+    clientIp: async () => "direct",
+    tooManyAttempts: async () => false,
+  };
+});
 
 let encoded = "";
 
@@ -123,5 +127,17 @@ describe("login", () => {
     expect(extractCleanPhone("918957056200")).toBe("8957056200");
     expect(extractCleanPhone("08957056200")).toBe("8957056200");
     expect(extractCleanPhone("89570-56200")).toBe("8957056200");
+  });
+
+  it("does not redirect browsers to the Node bind address 0.0.0.0", async () => {
+    state.user = { id: 1, email: "admin@example.com", password: encoded, is_active: true, user_type: USER_TYPE_ADMIN, last_login: null };
+    const { POST } = await import("../../app/doLogin/route");
+    const body = new FormData();
+    body.set("email", "admin@example.com");
+    body.set("password", "correct-horse");
+    const response = await POST(new Request("http://0.0.0.0:3000/doLogin/", { method: "POST", body }));
+    const location = response.headers.get("location") ?? "";
+    expect(location).toContain("/admin/home/");
+    expect(location).not.toMatch(/0\.0\.0\.0/);
   });
 });
