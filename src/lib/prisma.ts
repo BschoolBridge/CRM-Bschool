@@ -1,5 +1,6 @@
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { config } from "../config/env";
+import { logger } from "./logger";
 import { PrismaClient, Prisma } from "../generated/prisma/client";
 
 function poolConfigFromUrl(url: string) {
@@ -7,19 +8,35 @@ function poolConfigFromUrl(url: string) {
   if (!["mysql:", "mariadb:"].includes(u.protocol)) {
     throw new Error("DATABASE_URL must use the mysql:// or mariadb:// scheme");
   }
+  const database = u.pathname.replace(/^\//, "");
+  if (!u.username || !database) {
+    throw new Error("DATABASE_URL must include username and database name");
+  }
+  // Hostinger Node apps must use 127.0.0.1 (not localhost / IPv6 ::1).
+  const host = u.hostname === "localhost" ? "127.0.0.1" : u.hostname;
   return {
-    host: u.hostname,
+    host,
     port: u.port ? Number(u.port) : 3306,
     user: decodeURIComponent(u.username),
     password: decodeURIComponent(u.password),
-    database: u.pathname.replace(/^\//, ""),
-    connectionLimit: config.databasePoolSize,
+    database,
+    connectionLimit: Math.min(Math.max(config.databasePoolSize, 1), 10),
+    connectTimeout: 15_000,
+    acquireTimeout: 15_000,
+    // MySQL 8 caching_sha2_password on shared hosts often needs this for TCP clients.
+    allowPublicKeyRetrieval: true,
     ssl: u.searchParams.get("ssl") === "true" ? { rejectUnauthorized: true } : undefined,
   };
 }
 
+const poolConfig = poolConfigFromUrl(config.databaseUrl);
+logger.info(
+  { host: poolConfig.host, port: poolConfig.port, user: poolConfig.user, database: poolConfig.database },
+  "Prisma MariaDB pool configured",
+);
+
 export const prisma = new PrismaClient({
-  adapter: new PrismaMariaDb(poolConfigFromUrl(config.databaseUrl)),
+  adapter: new PrismaMariaDb(poolConfig),
   log: config.debug ? ["warn", "error"] : ["error"],
 });
 
