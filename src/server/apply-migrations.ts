@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
-import mariadb from "mariadb";
+import mariadb, { type Connection } from "mariadb";
 import { logger } from "../lib/logger";
 
 const execFileAsync = promisify(execFile);
@@ -32,7 +32,7 @@ function poolFromDatabaseUrl(url: string) {
 
 /** True when the CRM schema is already present (e.g. phpMyAdmin import). */
 async function schemaAlreadyPresent(databaseUrl: string): Promise<boolean> {
-  let conn: mariadb.Connection | undefined;
+  let conn: Connection | undefined;
   try {
     conn = await mariadb.createConnection(poolFromDatabaseUrl(databaseUrl));
     const rows = await conn.query(
