@@ -108,13 +108,9 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ lea
                       </ul>
                     ) : null}
                     <ClientForm action={addAlternatePhone.bind(null, lead.id)} markup={formMarkup(blankPhone)} submitLabel="Add Alternate" />
-                    <p><strong>School:</strong> {lead.school_name || "Not provided"}</p>
-                    <p><strong>Position:</strong> {lead.position || "Not provided"}</p>
-                    <p><strong>Course:</strong> {lead.course_interested || "Not provided"}</p>
-                    <p><strong>Graduation:</strong> {shown(lead, "get_graduation_status_display")}</p>
-                    <p><strong>Graduation course:</strong> {lead.graduation_course || "Not specified"}</p>
-                    <p><strong>Graduation year:</strong> {lead.graduation_year || "Not specified"}</p>
-                    <p><strong>Graduation college:</strong> {lead.graduation_college || "Not specified"}</p>
+                    <p><strong>City:</strong> {lead.city || "Not provided"}</p>
+                    <p><strong>College:</strong> {lead.school_name || "Not provided"}</p>
+                    <p><strong>Course / Exam:</strong> {lead.course_interested || "Not provided"}</p>
                   </div>
                   <div className="col-md-6">
                     <p><strong>Status:</strong> <StatusBadge code={lead.status} /></p>

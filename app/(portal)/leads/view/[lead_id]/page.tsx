@@ -87,27 +87,18 @@ export default async function ViewLeadPage({ params }: { params: Promise<{ lead_
                       <td><strong>Alternate Phone:</strong></td>
                       <td>{lead.alternate_phone ? <a href={`tel:${lead.alternate_phone}`}>{lead.alternate_phone}</a> : <span className="text-muted">Not provided</span>}</td>
                     </tr>
-                    <tr><td><strong>School Name:</strong></td><td>{lead.school_name || "Not provided"}</td></tr>
-                    <tr><td><strong>Position:</strong></td><td>{lead.position || "Not provided"}</td></tr>
+                    <tr><td><strong>City:</strong></td><td>{lead.city || "Not provided"}</td></tr>
+                    <tr><td><strong>College:</strong></td><td>{lead.school_name || "Not provided"}</td></tr>
+                    <tr><td><strong>Course / Exam:</strong></td><td>{lead.course_interested || "Not provided"}</td></tr>
                   </tbody>
                 </table>
               </div>
               <div className="col-md-6">
-                <h5>Education Information</h5>
+                <h5>Profile Details</h5>
                 <table className="table table-borderless">
                   <tbody>
-                    <tr>
-                      <td><strong>Graduation Status:</strong></td>
-                      <td>{lead.graduation_status === "YES" ? <span className="badge badge-success">Yes</span> : <span className="badge badge-secondary">No</span>}</td>
-                    </tr>
-                    {lead.graduation_status === "YES" ? (
-                      <>
-                        <tr><td><strong>Graduation Course:</strong></td><td>{lead.graduation_course || "Not provided"}</td></tr>
-                        <tr><td><strong>Graduation Year:</strong></td><td>{lead.graduation_year ?? "Not provided"}</td></tr>
-                        <tr><td><strong>Graduation College:</strong></td><td>{lead.graduation_college || "Not provided"}</td></tr>
-                      </>
-                    ) : null}
-                    <tr><td><strong>Course Interested:</strong></td><td>{lead.course_interested || "Not provided"}</td></tr>
+                    <tr><td><strong>Campaign / Form:</strong></td><td>{lead.source_campaign || "Not provided"}</td></tr>
+                    <tr><td><strong>Address:</strong></td><td>{lead.address || "Not provided"}</td></tr>
                   </tbody>
                 </table>
               </div>

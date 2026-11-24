@@ -188,7 +188,7 @@ export default async function MyLeadsPage({ searchParams }: { searchParams: Prom
                 <table className="table table-bordered table-striped">
                   <thead>
                     <tr>
-                      <th>Lead ID</th><th>Name</th><th>School</th><th>Email</th><th>Phone</th><th>Source</th>
+                      <th>Lead ID</th><th>Name</th><th>Course / Exam</th><th>Email</th><th>Phone</th><th>Source</th>
                       <th>Status</th><th>Priority</th><th>Last Contact</th><th>Next Visit</th><th>Recent Activity</th><th></th>
                     </tr>
                   </thead>
@@ -197,7 +197,7 @@ export default async function MyLeadsPage({ searchParams }: { searchParams: Prom
                       <tr key={lead.id}>
                         <td>{lead.lead_id}</td>
                         <td>{lead.first_name} {lead.last_name}</td>
-                        <td>{lead.school_name || "—"}</td>
+                        <td>{lead.course_interested || "—"}</td>
                         <td>{lead.email}</td>
                         <td>
                           {lead.phone ? (

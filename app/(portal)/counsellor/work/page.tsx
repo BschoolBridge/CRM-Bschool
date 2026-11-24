@@ -406,8 +406,7 @@ export default async function CounsellorWorkPage({ searchParams }: { searchParam
                           <th>Date</th>
                           <th>Counsellor</th>
                           <th>Lead</th>
-                          <th>Course Interested</th>
-                          <th>School</th>
+                          <th>Course / Exam</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>
@@ -429,7 +428,6 @@ export default async function CounsellorWorkPage({ searchParams }: { searchParam
                               </Link>
                             </td>
                             <td>{lead.course_interested || "-"}</td>
-                            <td>{lead.school_name || "-"}</td>
                             <td>
                               <StatusBadge code={lead.status} />
                             </td>
