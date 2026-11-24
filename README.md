@@ -7,7 +7,7 @@ Next.js App Router + Prisma + MariaDB. URL paths, AdminLTE chrome, and lead/admi
 1. Copy `.env.example` to `.env` and set the required `SECRET_KEY` and `DATABASE_URL`. `USE_HTTPS` is optional (inferred from `SITE_URL` / `NODE_ENV`).
 2. Start the MariaDB data directory in `.dev/mariadb` if it is not already running. The database name is `crm`. Use port **3307** when it is free. If another MariaDB already listens on 3307, start this directory on a free port and put that port in `DATABASE_URL`.
 3. `npm install`
-4. `npx prisma migrate deploy`
+4. `npx prisma migrate deploy` (on Hostinger with empty phpMyAdmin: import `prisma/hostinger-phpmyadmin-import.sql` into the CRM database)
 5. `npm run db:seed`
 6. `npm run user:create-superuser`
 7. `npm run dev` — http://127.0.0.1:8000/
