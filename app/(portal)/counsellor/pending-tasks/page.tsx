@@ -62,10 +62,37 @@ export default async function PendingTasksPage() {
       <PageHeader title="My Tasks" />
       <section className="content">
         <div className="container-fluid">
-          <div className="row">
-            <div className="col-md-4"><div className="info-box"><span className="info-box-icon bg-warning"><i className="fas fa-tasks" /></span><div className="info-box-content"><span className="info-box-text">Incomplete</span><span className="info-box-number">{incompleteRows.length}</span></div></div></div>
-            <div className="col-md-4"><div className="info-box"><span className="info-box-icon bg-info"><i className="fas fa-forward" /></span><div className="info-box-content"><span className="info-box-text">Next actions</span><span className="info-box-number">{pendingNext.length}</span></div></div></div>
-            <div className="col-md-4"><div className="info-box"><span className="info-box-icon bg-success"><i className="fas fa-calendar" /></span><div className="info-box-content"><span className="info-box-text">Upcoming visits</span><span className="info-box-number">{visits.length}</span></div></div></div>
+          <div className="admin-stat-grid">
+            <div className="admin-stat-card">
+              <div className="admin-stat-info">
+                <div className="admin-stat-label">Incomplete</div>
+                <div className="admin-stat-num">{incompleteRows.length}</div>
+                <p className="admin-stat-meta">Open activities to finish</p>
+              </div>
+              <div className="admin-stat-icon" style={{ background: "#fffbeb", color: "#d97706" }}>
+                <i className="fas fa-tasks" />
+              </div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-info">
+                <div className="admin-stat-label">Next actions</div>
+                <div className="admin-stat-num">{pendingNext.length}</div>
+                <p className="admin-stat-meta">Follow-ups still due</p>
+              </div>
+              <div className="admin-stat-icon" style={{ background: "#eff6ff", color: "#3157E8" }}>
+                <i className="fas fa-forward" />
+              </div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-info">
+                <div className="admin-stat-label">Upcoming visits</div>
+                <div className="admin-stat-num">{visits.length}</div>
+                <p className="admin-stat-meta">Scheduled follow-up visits</p>
+              </div>
+              <div className="admin-stat-icon" style={{ background: "#ecfdf5", color: "#059669" }}>
+                <i className="fas fa-calendar" />
+              </div>
+            </div>
           </div>
           <Card title="Incomplete activities">
             {incompleteRows.length === 0 ? <Empty text="All activities are completed!" /> : (

@@ -85,11 +85,45 @@ export default async function MyLeadsPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader title="My Leads">
+      <PageHeader title="My Leads" subtitle="Search, filter, and work your assigned applicant queue">
         <Link className="btn btn-primary btn-sm" href={reverse("counsellor_add_lead")}>Add Lead</Link>
       </PageHeader>
       <section className="content">
         <div className="container-fluid">
+          <div className="admin-stat-grid">
+            <div className="admin-stat-card">
+              <div className="admin-stat-info">
+                <div className="admin-stat-label">Assigned to me</div>
+                <div className="admin-stat-num">{totalAssigned.toLocaleString()}</div>
+                <p className="admin-stat-meta">Total leads in your queue</p>
+              </div>
+              <div className="admin-stat-icon" style={{ background: "#eff6ff", color: "#3157E8" }}>
+                <i className="fas fa-users" />
+              </div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-info">
+                <div className="admin-stat-label">Filtered view</div>
+                <div className="admin-stat-num">{leads.paginator.count.toLocaleString()}</div>
+                <p className="admin-stat-meta">
+                  {filtersActive ? "Matching current filters" : "All assigned leads"}
+                </p>
+              </div>
+              <div className="admin-stat-icon" style={{ background: "#eef2ff", color: "#4f46e5" }}>
+                <i className="fas fa-filter" />
+              </div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-info">
+                <div className="admin-stat-label">On this page</div>
+                <div className="admin-stat-num">{rows.length.toLocaleString()}</div>
+                <p className="admin-stat-meta">Showing up to 50 per page</p>
+              </div>
+              <div className="admin-stat-icon" style={{ background: "#ecfdf5", color: "#059669" }}>
+                <i className="fas fa-table-list" />
+              </div>
+            </div>
+          </div>
           <Card
             title={<>My Assigned Leads <span className="badge badge-primary ml-2">{totalAssigned} leads</span></>}
             tools={<Link className="btn btn-primary btn-sm" href={reverse("counsellor_add_lead")}>Add Lead</Link>}
