@@ -25,11 +25,15 @@ export async function findLeadsByPhone(phone: unknown, excludeId?: number | null
   if (exact.length) return exact;
 
   const tail = norm.length >= 10 ? norm.slice(-10) : norm;
-  const candidates = await db.lead.findMany({
-    where: { phone: { endsWith: tail }, ...notSelf },
-    select: PHONE_SELECT,
-    orderBy: [{ updated_at: "desc" }, { id: "desc" }],
-  });
+  // Prisma sends the bound value as utf8mb4_bin. A plain LIKE against the
+  // unicode_ci phone column raises MariaDB error 1267 and rejects the webhook.
+  const candidates = await db.$queryRaw<PhoneMatch[]>`
+    SELECT id, lead_id, phone, first_name, last_name, updated_at
+    FROM leads
+    WHERE phone COLLATE utf8mb4_unicode_ci LIKE CONCAT('%', ${tail} COLLATE utf8mb4_unicode_ci)
+      AND (${excludeId ?? null} IS NULL OR id <> ${excludeId ?? 0})
+    ORDER BY updated_at DESC, id DESC
+  `;
   return candidates.filter((c) => normalizeLeadPhone(c.phone) === norm);
 }
 
