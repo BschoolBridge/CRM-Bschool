@@ -51,7 +51,7 @@ export const shellState = rememberRequest(async (user: AuthUser): Promise<ShellS
       ]);
       return incomplete + visits;
     }),
-    assignmentNotificationsForPopup(counsellor.id),
+    assignmentNotificationsForPopup(counsellor.id).catch(() => [] as unknown[]),
   ]);
   return {
     ...EMPTY,

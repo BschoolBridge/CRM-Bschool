@@ -165,15 +165,19 @@ function aggregateSingleNotes(notes: InboxNote[]): AssignmentPopup | null {
 
 /** Summary payloads for the counsellor popup (total count + per-source breakdown). */
 export async function assignmentNotificationsForPopup(counsellorId: number): Promise<AssignmentPopup[]> {
-  const notes = await prisma.notificationCounsellor.findMany({
-    where: {
-      counsellor_id: counsellorId,
-      is_read: false,
-      OR: [{ message: { contains: BULK_ASSIGN_PREFIX } }, { message: { contains: ASSIGN_PREFIX } }],
-    },
-    orderBy: { created_at: "desc" },
-    select: { id: true, message: true, created_at: true },
-  });
+  // Prisma binds LIKE params as utf8mb4_bin; Hostinger MariaDB rejects mixing that with
+  // unicode_ci message columns (error 1267), which broke counsellor login/home.
+  const notes = await prisma.$queryRaw<Array<{ id: number; message: string; created_at: Date }>>`
+    SELECT id, message, created_at
+    FROM counsellor_notifications
+    WHERE counsellor_id = ${counsellorId}
+      AND is_read = 0
+      AND (
+        message COLLATE utf8mb4_unicode_ci LIKE CONCAT('%', ${BULK_ASSIGN_PREFIX} COLLATE utf8mb4_unicode_ci, '%')
+        OR message COLLATE utf8mb4_unicode_ci LIKE CONCAT('%', ${ASSIGN_PREFIX} COLLATE utf8mb4_unicode_ci, '%')
+      )
+    ORDER BY created_at DESC
+  `;
 
   const bulk = notes.filter((n) => n.message.trim().startsWith(BULK_ASSIGN_PREFIX));
   const single = notes.filter((n) => n.message.trim().startsWith(ASSIGN_PREFIX));

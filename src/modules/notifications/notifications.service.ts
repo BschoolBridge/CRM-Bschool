@@ -10,11 +10,15 @@ export async function notifyAllAdmins(message: string, db: Db = prisma): Promise
 }
 
 export async function adminAlertSentToday(fragment: string, since: Date): Promise<boolean> {
-  const hit = await prisma.notificationAdmin.findFirst({
-    where: { created_at: { gte: since }, message: { contains: fragment } },
-    select: { id: true },
-  });
-  return Boolean(hit);
+  // Collation-safe LIKE: Prisma binds params as utf8mb4_bin (MariaDB 1267 on unicode_ci columns).
+  const rows = await prisma.$queryRaw<Array<{ id: number }>>`
+    SELECT id
+    FROM admin_notifications
+    WHERE created_at >= ${since}
+      AND message COLLATE utf8mb4_unicode_ci LIKE CONCAT('%', ${fragment} COLLATE utf8mb4_unicode_ci, '%')
+    LIMIT 1
+  `;
+  return rows.length > 0;
 }
 
 export function unreadAdminCount(userId: number): Promise<number> {
