@@ -1,6 +1,6 @@
 import { config } from "../../config/env";
 import { logger } from "../../lib/logger";
-import { normalizeLeadPhone } from "../../lib/phone";
+import { normalizeLeadPhone, placeholderLeadEmail } from "../../lib/phone";
 import { prisma } from "../../lib/prisma";
 import { isBlankCell, readSpreadsheet, type SheetRow } from "../../lib/spreadsheet";
 import { invalidateAdminDashboard } from "../dashboard/cache-keys";
@@ -12,62 +12,53 @@ import { duplicatePhoneMessage, findLeadByPhone } from "./phone-lookup";
 
 export const IMPORT_FAILURES_MAX_ROWS = 5000;
 
-/** Column headers match LeadForm field names (admin create/edit). */
+/** Template columns aligned with the Bschool Bridge website lead webhook contract. */
 export const IMPORT_TEMPLATE_HEADERS = [
-  "name",
-  "email",
+  "fullName",
   "phone",
-  "alternate_phone",
-  "school_name",
-  "position",
-  "graduation_status",
-  "graduation_course",
-  "graduation_year",
-  "graduation_college",
-  "course_interested",
-  "industry",
+  "email",
+  "targetExam",
+  "percentile",
+  "city",
+  "workExperience",
+  "academicBackground",
+  "budget",
+  "specialization",
+  "college",
   "notes",
-  "address",
-  "website",
-  "linkedin",
+  "source",
 ];
 
 export const IMPORT_TEMPLATE_SAMPLE_ROWS = [
   [
-    "John Doe",
-    "john.doe@example.com",
-    "1234567890",
-    "",
-    "MIT University",
-    "Student",
-    "YES",
-    "Computer Science",
-    "2020",
-    "MIT",
-    "MBA",
-    "",
-    "",
-    "221B Baker Street, London",
-    "",
-    "",
+    "Riya Sharma",
+    "9876543210",
+    "riya.sharma@example.com",
+    "CAT 2026",
+    "90-95",
+    "Delhi",
+    "1–2 years",
+    "B.Com",
+    "₹10–15 lakh",
+    "Marketing",
+    "FMS Delhi",
+    "Requested evening callback",
+    "counseling_form",
   ],
   [
-    "Jane Smith",
-    "jane.smith@example.com",
-    "9876543210",
-    "",
-    "Harvard University",
-    "",
-    "NO",
-    "Not Applicable",
-    "",
-    "Not Applicable",
-    "Digital Marketing",
-    "",
-    "",
-    "742 Evergreen Terrace, Springfield",
+    "Aman Verma",
+    "9988776655",
+    "aman.verma@example.com",
+    "XAT 2026",
+    "80-85",
+    "Mumbai",
+    "fresher",
+    "B.Tech",
+    "under ₹10 lakh",
+    "Finance",
     "",
     "",
+    "visit_popup",
   ],
 ];
 
@@ -95,13 +86,20 @@ function cellText(row: SheetRow, key: string, fallback = ""): string {
   return s || fallback;
 }
 
-/** First non-empty value among aliases (supports older "School Name" headers). */
-function cellAny(row: SheetRow, keys: string[], fallback = ""): string {
+/** Case-insensitive lookup across website + legacy import column names. */
+function cellAny(row: SheetRow, ...keys: string[]): string {
   for (const key of keys) {
-    const value = cellText(row, key);
+    const direct = cellText(row, key);
+    if (direct) return direct;
+  }
+  const byLower = new Map(Object.keys(row).map((key) => [key.trim().toLowerCase(), key]));
+  for (const key of keys) {
+    const actual = byLower.get(key.toLowerCase());
+    if (!actual) continue;
+    const value = cellText(row, actual);
     if (value) return value;
   }
-  return fallback;
+  return "";
 }
 
 function failureRow(rowNum: number, row: SheetRow, reason: string): ImportFailureRow {
@@ -110,23 +108,20 @@ function failureRow(rowNum: number, row: SheetRow, reason: string): ImportFailur
     const k = key.trim();
     if (k) raw[k] = isBlankCell(value) ? "" : String(value).trim();
   }
-  return { row_num: rowNum, name: cellText(row, "name"), email: cellText(row, "email"), phone: cellText(row, "phone"), reason, raw_row: raw };
+  const name = cellAny(row, "fullName", "full_name", "name");
+  return {
+    row_num: rowNum,
+    name,
+    email: cellAny(row, "email", "email_address"),
+    phone: cellAny(row, "phone", "mobile", "phone_number"),
+    reason,
+    raw_row: raw,
+  };
 }
 
 const MAX_LENGTHS: Record<string, number> = {
-  first_name: 100,
-  last_name: 100,
-  email: 254,
-  phone: 15,
-  alternate_phone: 15,
-  school_name: 200,
-  position: 100,
-  graduation_course: 200,
-  graduation_college: 200,
-  course_interested: 200,
-  industry: 100,
-  website: 200,
-  linkedin: 200,
+  first_name: 100, last_name: 100, email: 254, phone: 15, alternate_phone: 15, school_name: 200,
+  graduation_course: 200, graduation_college: 200, course_interested: 200, industry: 100, city: 100,
 };
 
 function lengthErrors(data: Record<string, unknown>): string | null {
@@ -139,40 +134,69 @@ function lengthErrors(data: Record<string, unknown>): string | null {
 
 /** One import row → lead columns; throws with the reason shown in the failure report. */
 export function leadFromImportRow(row: SheetRow, sourceId: number, assignedCounsellorId: number | null): LeadCreateData {
-  const fullName = cellText(row, "name");
-  const phone = cellText(row, "phone");
-  if (!fullName) throw new Error("Missing required column value: name");
-  if (!phone) throw new Error("Missing required column value: phone");
-  const [first = "", ...rest] = fullName.split(/\s+/);
+  const fullName = cellAny(row, "fullName", "full_name", "name", "student_name", "applicant_name");
+  const phoneRaw = cellAny(row, "phone", "mobile", "phone_number");
+  if (!fullName) throw new Error("Missing required column value: fullName (or name)");
+  if (!phoneRaw) throw new Error("Missing required column value: phone");
 
-  let graduationStatus = isBlankCell(row.graduation_status) ? "NO" : String(row.graduation_status).trim().toUpperCase();
+  const phone = normalizeLeadPhone(phoneRaw);
+  if (!phone) throw new Error("Missing or invalid phone number");
+
+  const [first = "", ...rest] = fullName.split(/\s+/).filter(Boolean);
+  const email = cellAny(row, "email", "email_address").toLowerCase() || placeholderLeadEmail(phone);
+  const targetExam = cellAny(row, "targetExam", "target_exam", "exam");
+  const specialization = cellAny(row, "specialization");
+  const courseInterested =
+    cellAny(row, "course_interested")
+    || [specialization, targetExam].filter(Boolean).join(" · ").slice(0, 200);
+  const college = cellAny(row, "college", "school_name", "School Name", "graduation_college");
+  const city = cellAny(row, "city").slice(0, 100);
+  const noteLines = [
+    cellAny(row, "notes", "message", "comments", "remark"),
+    targetExam ? `Target exam: ${targetExam}` : "",
+    cellAny(row, "percentile", "score_band", "exam_percentile")
+      ? `Percentile/score: ${cellAny(row, "percentile", "score_band", "exam_percentile")}`
+      : "",
+    cellAny(row, "workExperience", "work_experience")
+      ? `Work experience: ${cellAny(row, "workExperience", "work_experience")}`
+      : "",
+    cellAny(row, "academicBackground", "academic_background")
+      ? `Academic background: ${cellAny(row, "academicBackground", "academic_background")}`
+      : "",
+    cellAny(row, "budget") ? `Budget: ${cellAny(row, "budget")}` : "",
+    cellAny(row, "source", "lead_source", "form_type", "form")
+      ? `Website source: ${cellAny(row, "source", "lead_source", "form_type", "form")}`
+      : "",
+  ].filter(Boolean);
+
+  let graduationStatus = cellAny(row, "graduation_status").toUpperCase() || "NO";
   if (!["YES", "NO"].includes(graduationStatus)) graduationStatus = "NO";
   const graduated = graduationStatus === "YES";
 
   let graduationYear: number | null = null;
-  if (!isBlankCell(row.graduation_year)) {
-    const n = Math.trunc(Number(row.graduation_year));
+  const yearRaw = cellAny(row, "graduation_year");
+  if (yearRaw) {
+    const n = Math.trunc(Number(yearRaw));
     graduationYear = Number.isFinite(n) ? n : null;
   }
 
   return {
-    first_name: first,
-    last_name: rest.length ? fullName.slice(first.length).trim() : "",
-    email: cellText(row, "email"),
-    phone: normalizeLeadPhone(phone),
-    alternate_phone: cellAny(row, ["alternate_phone"]),
-    school_name: cellAny(row, ["school_name", "School Name"]),
-    position: cellText(row, "position"),
-    address: cellText(row, "address"),
-    notes: cellText(row, "notes"),
-    website: cellText(row, "website"),
-    linkedin: cellText(row, "linkedin"),
+    first_name: first.slice(0, 100),
+    last_name: (rest.length ? fullName.slice(first.length).trim() : "").slice(0, 100),
+    email,
+    phone,
+    alternate_phone: cellAny(row, "alternate_phone"),
+    school_name: college.slice(0, 200),
+    address: cellAny(row, "address"),
+    city,
     graduation_status: graduationStatus,
-    graduation_course: graduated ? cellText(row, "graduation_course", "Not Specified") : "Not Applicable",
-    graduation_college: graduated ? cellText(row, "graduation_college", "Not Specified") : "Not Applicable",
+    graduation_course: graduated ? cellAny(row, "graduation_course") || "Not Specified" : "Not Applicable",
+    graduation_college: graduated ? cellAny(row, "graduation_college") || "Not Specified" : "Not Applicable",
     graduation_year: graduationYear,
-    course_interested: cellText(row, "course_interested"),
-    industry: cellText(row, "industry"),
+    course_interested: courseInterested,
+    industry: cellAny(row, "industry"),
+    notes: noteLines.join("\n"),
+    source_campaign: cellAny(row, "source", "lead_source", "form_type", "form").slice(0, 150) || null,
     source_id: sourceId,
     assigned_counsellor_id: assignedCounsellorId,
     is_graduated: graduated ? "YES" : "NO",

@@ -73,20 +73,16 @@ export default async function ImportLeadsPage() {
         <div className="container-fluid">
           <Card title="Import Leads from Excel/CSV">
             <div className="alert alert-info">
-              <strong>Instructions:</strong> Upload an Excel (.xlsx) or CSV file using the same field names as Add/Edit Lead:
+              <strong>Instructions:</strong> Upload an Excel (.xlsx) or CSV file using the same fields as the website lead form:
               <ul className="mb-0 mt-2">
+                <li><strong>Required:</strong> fullName (or name), phone</li>
                 <li>
-                  <strong>Required:</strong> <code>name</code>, <code>phone</code>
+                  <strong>Optional:</strong> email, targetExam, percentile, city, workExperience, academicBackground,
+                  budget, specialization, college, notes, source
                 </li>
                 <li>
-                  <strong>Optional:</strong> <code>email</code>, <code>alternate_phone</code>, <code>school_name</code>,{" "}
-                  <code>position</code>, <code>graduation_status</code> (YES/NO), <code>graduation_course</code>,{" "}
-                  <code>graduation_year</code>, <code>graduation_college</code>, <code>course_interested</code>,{" "}
-                  <code>industry</code>, <code>notes</code>, <code>address</code>, <code>website</code>, <code>linkedin</code>
-                </li>
-                <li>
-                  <strong>Note:</strong> Source, status, priority, and counsellor are set in the form below (not in the file).
-                  If <code>graduation_status</code> is &quot;NO&quot;, graduation course/college become &quot;Not Applicable&quot;.
+                  <strong>Mapping:</strong> college → school name, specialization + targetExam → course interested.
+                  Extra website fields are stored in notes.
                 </li>
               </ul>
             </div>
