@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "32mb" },
     // Shared hosts (Hostinger) often hit thread/process limits during parallel builds.
     cpus: 1,
+    // Do not reuse client router cache for dynamic CRM pages (was replaying logged-out redirects).
+    staleTimes: { dynamic: 0, static: 30 },
   },
   async headers() {
     return [

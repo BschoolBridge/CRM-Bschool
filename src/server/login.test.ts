@@ -82,7 +82,7 @@ describe("login", () => {
   it("sends an admin with the right password to the admin home", async () => {
     state.user = { id: 1, email: "admin@example.com", password: encoded, is_active: true, user_type: USER_TYPE_ADMIN, last_login: null };
     const response = await submit("Admin@Example.com", "correct-horse");
-    expect(response.status).toBe(307);
+    expect(response.status).toBe(303);
     expect(pathname(response)).toBe("/admin/home/");
     expect(state.sessions).toHaveLength(1);
   });
@@ -90,6 +90,7 @@ describe("login", () => {
   it("sends a counsellor to the counsellor home", async () => {
     state.user = { id: 4, email: "counsellor@example.com", password: encoded, is_active: true, user_type: USER_TYPE_COUNSELLOR, last_login: null };
     const response = await submit("counsellor@example.com", "correct-horse");
+    expect(response.status).toBe(303);
     expect(pathname(response)).toBe("/counsellor/home/");
     expect(state.sessions).toHaveLength(1);
   });
@@ -116,7 +117,7 @@ describe("login", () => {
   it("sends an admin logging in with phone number to admin home", async () => {
     state.user = { id: 1, email: "admin@example.com", phone: "8957056200", password: encoded, is_active: true, user_type: USER_TYPE_ADMIN, last_login: null };
     const response = await submitPhone("8957056200", "correct-horse");
-    expect(response.status).toBe(307);
+    expect(response.status).toBe(303);
     expect(pathname(response)).toBe("/admin/home/");
     expect(state.sessions).toHaveLength(1);
   });

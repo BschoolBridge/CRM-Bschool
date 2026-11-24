@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { formatLocal } from "../lib/time";
 import { reverse } from "../http/urls";
@@ -8,16 +7,20 @@ import { shellState, type ShellState } from "../server/shell";
 import { peekFlash } from "../server/flash";
 import { FlashList } from "./ui";
 
+/**
+ * Use plain <a> for portal nav. Next.js client transitions were dropping the
+ * session on Hostinger (soft nav → login) even when full document loads worked.
+ */
 function Item({ href, icon, label, active, badge }: { href: string; icon: string; label: string; active: boolean; badge?: number }) {
   return (
     <li className="nav-item">
-      <Link href={href} className={`nav-link${active ? " active" : ""}`}>
+      <a href={href} className={`nav-link${active ? " active" : ""}`}>
         <i className={`nav-icon ${icon}`} />
         <p>
           {label}
           {badge ? <span className="badge badge-danger right">{badge}</span> : null}
         </p>
-      </Link>
+      </a>
     </li>
   );
 }
@@ -122,22 +125,22 @@ export async function Shell({ user, children }: { user: AuthUser; children: Reac
         </ul>
         <ul className="navbar-nav ml-auto">
           <li className="nav-item">
-            <Link className="nav-link" href={notes}>
+            <a className="nav-link" href={notes}>
               <i className="fas fa-bell" />
               {shell.notificationCount > 0 ? <span className="badge badge-danger navbar-badge">{shell.notificationCount}</span> : null}
-            </Link>
+            </a>
           </li>
           <li className="nav-item">
-            <Link className="nav-link" href={reverse("user_logout")}>
+            <a className="nav-link" href={reverse("user_logout")}>
               <i className="fas fa-sign-out-alt" /> Logout
-            </Link>
+            </a>
           </li>
         </ul>
       </nav>
       <aside className="main-sidebar sidebar-dark-primary elevation-4">
-        <Link href={home} className="brand-link">
+        <a href={home} className="brand-link">
           <span className="brand-text">Bschool Bridge</span>
-        </Link>
+        </a>
         <div className="sidebar">
           <nav className="mt-2">
             <ul className="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">

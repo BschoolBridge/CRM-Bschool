@@ -3,14 +3,25 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Shell } from "../../src/components/shell";
 import { BodyClass } from "../../src/components/client-form";
+import { config } from "../../src/config/env";
 import { getCurrentUser } from "../../src/server/actor";
 import { USER_TYPE_COUNSELLOR } from "../../src/server/auth";
 
 export const dynamic = "force-dynamic";
 
+function loginRedirectTarget(): string {
+  const site = config.siteUrl?.trim();
+  if (!site) return "/";
+  try {
+    return new URL("/", site.includes("://") ? site : `https://${site}`).toString();
+  } catch {
+    return "/";
+  }
+}
+
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/");
+  if (!user) redirect(loginRedirectTarget());
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <>

@@ -15,7 +15,8 @@ export function GET() {
 }
 
 function redirectWithPublicOrigin(path: string, request: Request): NextResponse {
-  return NextResponse.redirect(new URL(path, `${publicOrigin(request)}/`));
+  // 303 after POST so the browser always follows with GET on the public origin.
+  return NextResponse.redirect(new URL(path, `${publicOrigin(request)}/`), 303);
 }
 
 export async function POST(request: Request) {
