@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next dev -p 8000",
     "build": "prisma generate && next build --webpack",
-    "start": "prisma migrate deploy && next start -p 8000",
+    "start": "next start -p 8000",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:start": "mariadbd --datadir=.dev/mariadb --socket=.dev/mariadb.sock --port=3308",
