@@ -19,7 +19,7 @@ Login uses email and the existing `pbkdf2_sha256` password hashes. Pages are ser
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Next.js dev server on `:8000` |
-| `npm run build` / `npm start` | Production build (runs `prisma migrate deploy`, then Next) and server |
+| `npm run build` / `npm start` | Build + start both run `prisma migrate deploy` (creates/updates tables automatically) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest. Uses a dummy database URL and does not need MariaDB |
 | `npm run db:migrate` | Apply Prisma migrations (also runs automatically during `npm run build`) |
