@@ -4,9 +4,13 @@ import { cache } from "react";
 import { config } from "../config/env";
 import { prisma } from "../lib/prisma";
 import type { ImportFailurePayload } from "../modules/leads/import.service";
-import { baseCookieOptions } from "./cookies";
+import {
+  SESSION_COOKIE,
+  sessionCookieOptions,
+  sessionCookieValue,
+  sidFromSessionCookie,
+} from "./session-cookie";
 
-const COOKIE = "sessionid";
 const TOUCH_MS = 60_000;
 
 export type AppSession = {
@@ -21,41 +25,9 @@ export type AppSession = {
   cookie?: unknown;
 };
 
-function sign(value: string, secret: string): string {
-  return `${value}.${crypto.createHmac("sha256", secret).update(value).digest("base64").replace(/=+$/, "")}`;
-}
-
-function unsign(signed: string, secret: string): string | null {
-  const i = signed.lastIndexOf(".");
-  if (i <= 0) return null;
-  const value = signed.slice(0, i);
-  const expected = Buffer.from(sign(value, secret));
-  const given = Buffer.from(signed);
-  if (expected.length !== given.length || !crypto.timingSafeEqual(expected, given)) return null;
-  return value;
-}
-
-function sidFromCookie(raw: string | undefined): string | null {
-  if (!raw) return null;
-  let decoded = raw;
-  try {
-    decoded = decodeURIComponent(raw);
-  } catch {
-    decoded = raw;
-  }
-  if (!decoded.startsWith("s:")) return null;
-  return unsign(decoded.slice(2), config.secretKey);
-}
-
-function cookieValue(sid: string): string {
-  return `s:${sign(sid, config.secretKey)}`;
-}
-
-const cookieOptions = baseCookieOptions();
-
 export const readSession = cache(async (): Promise<{ sid: string | null; data: AppSession }> => {
   const jar = await cookies();
-  const sid = sidFromCookie(jar.get(COOKIE)?.value);
+  const sid = sidFromSessionCookie(jar.get(SESSION_COOKIE)?.value);
   if (!sid) return { sid: null, data: {} };
   const row = await prisma.session.findUnique({ where: { sid } });
   if (!row || row.expires_at <= new Date()) return { sid: null, data: {} };
@@ -92,7 +64,8 @@ export async function updateSession(mutator: (data: AppSession) => void): Promis
   });
 }
 
-export async function createSession(data: AppSession): Promise<void> {
+/** Create DB session and return cookie name/value for the login redirect response. */
+export async function createSession(data: AppSession): Promise<{ name: string; value: string }> {
   const current = await readSession();
   if (current.sid) await prisma.session.deleteMany({ where: { sid: current.sid } });
   const sid = crypto.randomBytes(24).toString("base64url");
@@ -104,15 +77,17 @@ export async function createSession(data: AppSession): Promise<void> {
       expires_at: new Date(Date.now() + config.sessionMaxAgeSeconds * 1000),
     },
   });
+  const value = sessionCookieValue(sid);
   const jar = await cookies();
-  jar.set(COOKIE, cookieValue(sid), cookieOptions);
+  jar.set(SESSION_COOKIE, value, sessionCookieOptions());
+  return { name: SESSION_COOKIE, value };
 }
 
 export async function destroySession(): Promise<void> {
   const { sid } = await readSession();
   if (sid) await prisma.session.deleteMany({ where: { sid } });
   const jar = await cookies();
-  jar.delete(COOKIE);
+  jar.set(SESSION_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
 }
 
 export function startSessionCleanup(): NodeJS.Timeout {

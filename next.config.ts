@@ -19,6 +19,27 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "same-origin" },
         ],
       },
+      // Portal HTML must never be shared across users by a CDN (proxy.ts also sets this).
+      {
+        source: "/admin/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/counsellor/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/leads/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/businesses/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/integrations/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }],
+      },
     ];
   },
 };

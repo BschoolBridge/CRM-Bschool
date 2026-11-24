@@ -26,6 +26,7 @@ vi.mock("./flash", () => ({
 vi.mock("./session", () => ({
   createSession: async (data: unknown) => {
     state.sessions.push(data);
+    return { name: "sessionid", value: "s:test.session" };
   },
 }));
 
