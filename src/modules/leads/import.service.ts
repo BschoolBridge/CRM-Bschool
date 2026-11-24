@@ -12,14 +12,63 @@ import { duplicatePhoneMessage, findLeadByPhone } from "./phone-lookup";
 
 export const IMPORT_FAILURES_MAX_ROWS = 5000;
 
+/** Column headers match LeadForm field names (admin create/edit). */
 export const IMPORT_TEMPLATE_HEADERS = [
-  "name", "email", "phone", "alternate_phone", "address", "School Name",
-  "graduation_status", "graduation_course", "graduation_year", "graduation_college", "course_interested",
+  "name",
+  "email",
+  "phone",
+  "alternate_phone",
+  "school_name",
+  "position",
+  "graduation_status",
+  "graduation_course",
+  "graduation_year",
+  "graduation_college",
+  "course_interested",
+  "industry",
+  "notes",
+  "address",
+  "website",
+  "linkedin",
 ];
 
 export const IMPORT_TEMPLATE_SAMPLE_ROWS = [
-  ["John Doe", "john.doe@example.com", "1234567890", "", "221B Baker Street, London", "MIT University", "YES", "Computer Science", "2020", "MIT", "MBA"],
-  ["Jane Smith", "jane.smith@example.com", "9876543210", "", "742 Evergreen Terrace, Springfield", "Harvard University", "NO", "Not Applicable", "", "Not Applicable", "Digital Marketing"],
+  [
+    "John Doe",
+    "john.doe@example.com",
+    "1234567890",
+    "",
+    "MIT University",
+    "Student",
+    "YES",
+    "Computer Science",
+    "2020",
+    "MIT",
+    "MBA",
+    "",
+    "",
+    "221B Baker Street, London",
+    "",
+    "",
+  ],
+  [
+    "Jane Smith",
+    "jane.smith@example.com",
+    "9876543210",
+    "",
+    "Harvard University",
+    "",
+    "NO",
+    "Not Applicable",
+    "",
+    "Not Applicable",
+    "Digital Marketing",
+    "",
+    "",
+    "742 Evergreen Terrace, Springfield",
+    "",
+    "",
+  ],
 ];
 
 export interface ImportFailureRow {
@@ -46,6 +95,15 @@ function cellText(row: SheetRow, key: string, fallback = ""): string {
   return s || fallback;
 }
 
+/** First non-empty value among aliases (supports older "School Name" headers). */
+function cellAny(row: SheetRow, keys: string[], fallback = ""): string {
+  for (const key of keys) {
+    const value = cellText(row, key);
+    if (value) return value;
+  }
+  return fallback;
+}
+
 function failureRow(rowNum: number, row: SheetRow, reason: string): ImportFailureRow {
   const raw: Record<string, string> = {};
   for (const [key, value] of Object.entries(row)) {
@@ -56,8 +114,19 @@ function failureRow(rowNum: number, row: SheetRow, reason: string): ImportFailur
 }
 
 const MAX_LENGTHS: Record<string, number> = {
-  first_name: 100, last_name: 100, email: 254, phone: 15, alternate_phone: 15, school_name: 200,
-  graduation_course: 200, graduation_college: 200, course_interested: 200, industry: 100,
+  first_name: 100,
+  last_name: 100,
+  email: 254,
+  phone: 15,
+  alternate_phone: 15,
+  school_name: 200,
+  position: 100,
+  graduation_course: 200,
+  graduation_college: 200,
+  course_interested: 200,
+  industry: 100,
+  website: 200,
+  linkedin: 200,
 };
 
 function lengthErrors(data: Record<string, unknown>): string | null {
@@ -91,9 +160,13 @@ export function leadFromImportRow(row: SheetRow, sourceId: number, assignedCouns
     last_name: rest.length ? fullName.slice(first.length).trim() : "",
     email: cellText(row, "email"),
     phone: normalizeLeadPhone(phone),
-    alternate_phone: isBlankCell(row.alternate_phone) ? "" : String(row.alternate_phone).trim(),
-    school_name: cellText(row, "School Name"),
+    alternate_phone: cellAny(row, ["alternate_phone"]),
+    school_name: cellAny(row, ["school_name", "School Name"]),
+    position: cellText(row, "position"),
     address: cellText(row, "address"),
+    notes: cellText(row, "notes"),
+    website: cellText(row, "website"),
+    linkedin: cellText(row, "linkedin"),
     graduation_status: graduationStatus,
     graduation_course: graduated ? cellText(row, "graduation_course", "Not Specified") : "Not Applicable",
     graduation_college: graduated ? cellText(row, "graduation_college", "Not Specified") : "Not Applicable",

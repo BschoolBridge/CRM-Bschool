@@ -31,7 +31,6 @@ function AdminMenu({ active, shell }: { active: string; shell: ShellState }) {
       <Item href={reverse("admin_home")} icon="fas fa-tachometer-alt" label="Overview" active={active === "admin_dashboard"} />
       <li className="nav-header">LEADS</li>
       <Item href={reverse("manage_leads")} icon="fas fa-users" label="Leads" active={active === "admin_leads"} />
-      <Item href={reverse("manage_admitted_students")} icon="fas fa-user-graduate" label="After Admission" active={active === "admin_after_admission"} />
       <li className="nav-header">TEAM</li>
       <Item href={reverse("manage_counsellors")} icon="fas fa-user-tie" label="Counsellors" active={active === "admin_counsellors"} />
       <Item href={reverse("manage_daily_targets")} icon="fas fa-bullseye" label="Daily Targets" active={active === "admin_daily_targets"} />

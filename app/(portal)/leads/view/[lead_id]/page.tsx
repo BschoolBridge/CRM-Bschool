@@ -61,7 +61,6 @@ export default async function ViewLeadPage({ params }: { params: Promise<{ lead_
                   </button>
                 )}
                 <a href="#manual-route" className="btn btn-primary btn-sm">Manual Route</a>
-                <Link href={reverse("promote_lead_to_admission", lead.id)} className="btn btn-success btn-sm">After Admission</Link>
                 <Link href={reverse("edit_lead", lead.id)} className="btn btn-warning btn-sm">Edit Lead</Link>
                 <Link href={reverse("manage_leads")} className="btn btn-secondary btn-sm">Back to Leads</Link>
               </div>

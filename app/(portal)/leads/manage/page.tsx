@@ -145,7 +145,7 @@ export default async function ManageLeadsPage({ searchParams }: { searchParams: 
                       className="form-control"
                       id="search"
                       name="search"
-                      placeholder="Name (first, last, or full), phone, email, school…"
+                      placeholder="Name (first, last, or full), phone, email…"
                       defaultValue={filters.search ?? ""}
                     />
                     <small className="form-text text-muted">Searches the full lead list. Press Enter or click Filter.</small>
@@ -251,7 +251,6 @@ export default async function ManageLeadsPage({ searchParams }: { searchParams: 
                       <th>Name</th>
                       <th>Phone</th>
                       <th>Course Interested In</th>
-                      <th>School Name</th>
                       <th>Source</th>
                       <th>Status</th>
                       <th>Priority</th>
@@ -262,7 +261,7 @@ export default async function ManageLeadsPage({ searchParams }: { searchParams: 
                   <tbody>
                     {leads.length === 0 ? (
                       <tr>
-                        <td colSpan={12}><Empty text="No leads found." /></td>
+                        <td colSpan={11}><Empty text="No leads found." /></td>
                       </tr>
                     ) : (
                       leads.map((lead, index) => (
@@ -277,7 +276,6 @@ export default async function ManageLeadsPage({ searchParams }: { searchParams: 
                             {lead.phone ? <a href={`tel:${lead.phone}`}>{lead.phone}</a> : <span className="text-muted">Not provided</span>}
                           </td>
                           <td>{lead.course_interested || "-"}</td>
-                          <td>{lead.school_name || "-"}</td>
                           <td>{lead.source.name}</td>
                           <td><StatusBadge code={lead.status} /></td>
                           <td><PriorityBadge code={lead.priority} /></td>
