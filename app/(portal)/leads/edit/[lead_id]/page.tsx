@@ -4,6 +4,7 @@ import { ClientForm } from "@/components/client-form";
 import { Card, PageHeader } from "@/components/ui";
 import { reverse } from "@/http/urls";
 import { prisma } from "@/lib/prisma";
+import { logLeadProfileChanges } from "@/modules/leads/field-history";
 import { LeadForm } from "@/modules/leads/lead.forms";
 import { updateLead } from "@/modules/leads/lead.repository";
 import { logStatusChange } from "@/modules/leads/status-history";
@@ -35,10 +36,17 @@ export default async function EditLeadPage({ params }: { params: Promise<{ lead_
     }
     try {
       const updated = await updateLead(current.id, form.leadData() as never);
-      await logStatusChange(updated, current.status, form.cleaned_data.status || current.status, {
-        counsellorId: updated.assigned_counsellor_id,
-        loggedByAdminId: user.id,
-      });
+      const after = await prisma.lead.findUniqueOrThrow({ where: { id: current.id } });
+      await Promise.all([
+        logStatusChange(updated, current.status, form.cleaned_data.status || current.status, {
+          counsellorId: updated.assigned_counsellor_id,
+          loggedByAdminId: user.id,
+        }),
+        logLeadProfileChanges(current, after, {
+          counsellorId: after.assigned_counsellor_id,
+          loggedByAdminId: user.id,
+        }),
+      ]);
       await flash("success", "Lead updated successfully!");
       redirect(reverse("manage_leads"));
     } catch (err) {

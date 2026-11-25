@@ -73,16 +73,16 @@ export default async function ImportLeadsPage() {
         <div className="container-fluid">
           <Card title="Import Leads from Excel/CSV">
             <div className="alert alert-info">
-              <strong>Instructions:</strong> Upload an Excel (.xlsx) or CSV file using the same fields as the website lead form:
+              <strong>Instructions:</strong> Upload an Excel (.xlsx) or CSV file. Column names do not need to match the template exactly — similar labels are mapped automatically (for example <em>Full Name</em>, <em>Mobile No.</em>, <em>Work Exp</em>).
               <ul className="mb-0 mt-2">
-                <li><strong>Required:</strong> fullName (or name), phone</li>
+                <li><strong>Required:</strong> a name column (fullName / Full Name / name) and a phone column (phone / Mobile Number)</li>
                 <li>
-                  <strong>Optional:</strong> email, targetExam, percentile, city, workExperience, academicBackground,
+                  <strong>Optional:</strong> email, target exam, percentile, city, work experience, academic background,
                   budget, specialization, college, notes, source
                 </li>
                 <li>
-                  <strong>Mapping:</strong> college → school name, specialization + targetExam → course interested.
-                  Extra website fields are stored in notes.
+                  <strong>Mapping:</strong> college → school name, specialization + target exam → course interested.
+                  Extra website fields are stored in notes. Download the sample template for the preferred names.
                 </li>
               </ul>
             </div>

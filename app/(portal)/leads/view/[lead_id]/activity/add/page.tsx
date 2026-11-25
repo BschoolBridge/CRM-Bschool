@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { unstable_rethrow, notFound, redirect } from "next/navigation";
-import { ClientForm } from "@/components/client-form";
+import { ActivityFormSection } from "@/components/activity-form-section";
 import { Card, PageHeader } from "@/components/ui";
 import { reverse } from "@/http/urls";
 import { prisma } from "@/lib/prisma";
 import { LeadActivityForm } from "@/modules/activities/activity.form";
+import { activityFormMarkup } from "@/modules/activities/activity-form-markup";
 import { fullName, presentCounsellor, presentLead } from "@/modules/presenters";
 import { requireSuperadmin } from "@/server/actor";
 import { flash } from "@/server/flash";
-import { formInput, formMarkup, type FormState } from "@/server/form";
+import { formInput, type FormState } from "@/server/form";
 import { requiredId } from "@/server/request";
 import { saveAdminActivity } from "../../../../activity-save";
 import { failureText, formatStamp } from "../../../../format";
@@ -54,7 +55,7 @@ export default async function AddLeadActivityPage({ params }: { params: Promise<
     const form = await LeadActivityForm.create(await formInput(fd));
     if (!(await form.isValid())) {
       await flash("error", "Please correct the errors below.");
-      return { markup: formMarkup(form) };
+      return { markup: activityFormMarkup(form) };
     }
     try {
       const scheduled = await saveAdminActivity(user.id, form, current, current.assigned_counsellor.id, null);
@@ -66,7 +67,7 @@ export default async function AddLeadActivityPage({ params }: { params: Promise<
     } catch (err) {
       unstable_rethrow(err);
       await flash("error", failureText("Could not add activity", err));
-      return { markup: formMarkup(form) };
+      return { markup: activityFormMarkup(form) };
     }
   }
 
@@ -88,7 +89,7 @@ export default async function AddLeadActivityPage({ params }: { params: Promise<
             <p>
               Previous activity: {previous?.completed_date ? formatStamp(previous.completed_date) : <span className="text-muted">None</span>}
             </p>
-            <ClientForm action={save} markup={formMarkup(form)} submitLabel="Save activity" />
+            <ActivityFormSection action={save} markup={activityFormMarkup(form)} submitLabel="Save activity" />
             <Link href={reverse("admin_view_lead", lead.id)} className="btn btn-secondary mt-3">
               Cancel
             </Link>

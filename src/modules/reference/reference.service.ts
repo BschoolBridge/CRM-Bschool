@@ -33,6 +33,7 @@ export const DEFAULT_ACTIVITY_TYPES: Choice[] = [
   ["FOLLOW_UP", "Visit"],
   ["TRANSFER", "Lead Transfer"],
   ["STATUS_CHANGE", "Status Change"],
+  ["PROFILE_EDIT", "Profile Edit"],
   ["NOTE", "Note"],
 ];
 
@@ -173,6 +174,24 @@ export async function ensureStatusChangeActivityType(db: Db = prisma): Promise<v
       is_active: true,
       is_system: true,
       sort_order: 65,
+    },
+  });
+  await invalidateReferenceData();
+}
+
+export async function ensureProfileEditActivityType(db: Db = prisma): Promise<void> {
+  const exists = await db.activityType.findUnique({ where: { code: "PROFILE_EDIT" }, select: { id: true } });
+  if (exists) return;
+  await db.activityType.create({
+    data: {
+      code: "PROFILE_EDIT",
+      name: "Profile Edit",
+      description: "Lead profile fields were updated",
+      icon: "fas fa-user-edit",
+      color: "info",
+      is_active: true,
+      is_system: true,
+      sort_order: 66,
     },
   });
   await invalidateReferenceData();

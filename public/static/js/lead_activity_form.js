@@ -1,9 +1,19 @@
-(function ($) {
+(function (factory) {
+    'use strict';
+
+    function boot() {
+        if (window.jQuery && window.jQuery.fn) {
+            factory(window.jQuery);
+            return;
+        }
+        setTimeout(boot, 40);
+    }
+
+    boot();
+})(function ($) {
     'use strict';
 
     var OUTCOME_VISIT_SCHEDULED = 'Visit scheduled';
-    var VISIT_NEXT_ACTION_CODE = 'SCHEDULE_VISIT';
-    var initialized = false;
 
     function $outcome() {
         return $('#id_outcome_preset');
@@ -105,6 +115,10 @@
     }
 
     function bindLeadActivityForm() {
+        if (!$outcome().length) {
+            return;
+        }
+
         var $form = $outcome().closest('form');
         if (!$form.length) {
             $form = $('#lead-activity-form');
@@ -141,25 +155,12 @@
         }
     }
 
+    // Idempotent: ClientForm may replace markup after validation errors.
     window.initLeadActivityForm = function () {
-        if (initialized || !$outcome().length) {
-            return;
-        }
-        initialized = true;
         bindLeadActivityForm();
     };
 
-    function boot() {
-        if ($outcome().length) {
-            initLeadActivityForm();
-        }
+    if ($outcome().length) {
+        window.initLeadActivityForm();
     }
-
-    if ($ && $.fn) {
-        $(boot);
-    } else if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', boot);
-    } else {
-        boot();
-    }
-}(window.jQuery));
+});

@@ -44,6 +44,7 @@ const SECTIONS: Record<string, string[]> = {
   counsellor_activities: ["my_activities", "counsellor_calendar"],
   counsellor_daily_target: ["my_daily_target"],
   counsellor_pending_tasks: ["pending_tasks"],
+  counsellor_call_queue: ["counsellor_call_queue"],
   counsellor_profile: ["counsellor_view_profile"],
   counsellor_notifications: [
     "counsellor_view_notifications", "check_current_time_notifications",

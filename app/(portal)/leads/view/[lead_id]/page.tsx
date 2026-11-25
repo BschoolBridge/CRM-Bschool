@@ -4,6 +4,7 @@ import { PostButton } from "@/components/client-form";
 import { Card, Empty, PageHeader, PriorityBadge, StatusBadge } from "@/components/ui";
 import { reverse } from "@/http/urls";
 import { prisma } from "@/lib/prisma";
+import { parseLeadNoteMeta } from "@/modules/leads/lead.forms";
 import { statusHistory } from "@/modules/leads/status-history";
 import { fullName, presentActivity, presentAll, presentBusiness, presentLead } from "@/modules/presenters";
 import { requireAdmin } from "@/server/actor";
@@ -41,6 +42,13 @@ export default async function ViewLeadPage({ params }: { params: Promise<{ lead_
   const shownBusiness = presentBusiness(business);
   const superadmin = Boolean(user.admin_profile?.is_superadmin);
   const latest = history[0];
+  const noteParts = parseLeadNoteMeta(lead.notes ?? "");
+  const courseParts = String(lead.course_interested ?? "")
+    .split("·")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const specialization = courseParts[0] ?? lead.course_interested ?? "";
+  const targetExam = noteParts.meta.target_exam || courseParts[1] || "";
 
   return (
     <>
@@ -89,7 +97,8 @@ export default async function ViewLeadPage({ params }: { params: Promise<{ lead_
                     </tr>
                     <tr><td><strong>City:</strong></td><td>{lead.city || "Not provided"}</td></tr>
                     <tr><td><strong>College:</strong></td><td>{lead.school_name || "Not provided"}</td></tr>
-                    <tr><td><strong>Course / Exam:</strong></td><td>{lead.course_interested || "Not provided"}</td></tr>
+                    <tr><td><strong>Specialization:</strong></td><td>{specialization || "Not provided"}</td></tr>
+                    <tr><td><strong>Target Exam:</strong></td><td>{targetExam || "Not provided"}</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -97,6 +106,10 @@ export default async function ViewLeadPage({ params }: { params: Promise<{ lead_
                 <h5>Profile Details</h5>
                 <table className="table table-borderless">
                   <tbody>
+                    <tr><td><strong>Percentile / Score:</strong></td><td>{noteParts.meta.percentile || "Not provided"}</td></tr>
+                    <tr><td><strong>Work Experience:</strong></td><td>{noteParts.meta.work_experience || "Not provided"}</td></tr>
+                    <tr><td><strong>Academic Background:</strong></td><td>{noteParts.meta.academic_background || "Not provided"}</td></tr>
+                    <tr><td><strong>Budget:</strong></td><td>{noteParts.meta.budget || "Not provided"}</td></tr>
                     <tr><td><strong>Campaign / Form:</strong></td><td>{lead.source_campaign || "Not provided"}</td></tr>
                     <tr><td><strong>Address:</strong></td><td>{lead.address || "Not provided"}</td></tr>
                   </tbody>
@@ -151,12 +164,14 @@ export default async function ViewLeadPage({ params }: { params: Promise<{ lead_
                 </div>
               </div>
             ) : null}
-            {lead.notes ? (
-              <div className="mt-3">
-                <h5>Notes</h5>
-                <div className="alert alert-info mb-0">{lead.notes}</div>
-              </div>
-            ) : null}
+            <div className="mt-3">
+              <h5>Notes</h5>
+              {noteParts.freeform ? (
+                <div className="alert alert-info mb-0" style={{ whiteSpace: "pre-wrap" }}>{noteParts.freeform}</div>
+              ) : (
+                <p className="text-muted mb-0">No counsellor notes. Exam and profile details are listed above.</p>
+              )}
+            </div>
           </Card>
 
           <Card title="Status history">

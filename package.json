@@ -7,7 +7,7 @@
     "start": "next start -p 8000",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "db:start": "mariadbd --datadir=.dev/mariadb --socket=.dev/mariadb.sock --port=3308",
+    "db:start": "mariadbd --datadir=\"$PWD/.dev/mariadb\" --socket=\"$PWD/.dev/mariadb.sock\" --pid-file=\"$PWD/.dev/mariadb.pid\" --port=3308",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "user:create-superuser": "tsx scripts/create-superuser.ts",

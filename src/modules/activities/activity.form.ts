@@ -44,6 +44,7 @@ export interface LeadActivityCleaned {
   outcome_preset: string;
   outcome_other: string;
   has_next_action: string;
+  next_action_title: string;
   followup_date: Date | null;
   followup_notes: string;
   resolved_outcome: string;
@@ -79,7 +80,8 @@ export class LeadActivityForm extends Form<LeadActivityCleaned> {
         }),
         description: new TextField({}),
         next_action: new ChoiceField({
-          choices: [["", "— Select Next Action —"], ...nextActions],
+          // nextActionChoices() already includes a leading empty option.
+          choices: nextActions.length ? nextActions : [["", "— Select Next Action —"]],
           required: false,
           label: "Next action",
         }),
@@ -106,8 +108,18 @@ export class LeadActivityForm extends Form<LeadActivityCleaned> {
           ],
           initial: "no",
           required: false,
-          widget: new RadioSelect({ class: "custom-control-input" }),
+          // Native radios — AdminLTE `custom-control-input` hides the control without the BS4 wrapper markup.
+          widget: new RadioSelect(),
           label: "Is there a next action?",
+        }),
+        next_action_title: new CharField({
+          required: false,
+          maxLength: 200,
+          label: "Next action title",
+          widget: new TextInput({
+            class: "form-control",
+            placeholder: "Short title for the follow-up (optional)",
+          }),
         }),
         followup_date: new DateTimeField({ required: false, label: "Next Follow-up Date" }),
         followup_notes: new CharField({
@@ -136,6 +148,7 @@ export class LeadActivityForm extends Form<LeadActivityCleaned> {
         this.setInitial("outcome_preset", OTHER_OUTCOME);
         this.setInitial("outcome_other", o);
       } else this.setInitial("outcome_preset", "");
+      if ((activity.next_action ?? "").trim()) this.setInitial("has_next_action", "yes");
     }
   }
 
@@ -160,6 +173,13 @@ export class LeadActivityForm extends Form<LeadActivityCleaned> {
     } else if (c.has_next_action === "yes") {
       if (!c.followup_date) return this.addError("followup_date", "Please choose the next follow-up date and time.");
       if (!(c.next_action ?? "").trim()) return this.addError("next_action", "Please select the next action.");
+    } else {
+      // Hidden next-action fields still submit; clear them when the user chose No.
+      c.has_next_action = "no";
+      c.next_action = "";
+      c.next_action_title = "";
+      c.followup_date = null;
+      c.followup_notes = "";
     }
   }
 

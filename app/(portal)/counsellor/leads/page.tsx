@@ -3,7 +3,6 @@ import { encodeQuery, field } from "@/http/params";
 import { reverse } from "@/http/urls";
 import { paginate } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
-import { formatDjango } from "@/lib/time";
 import { ACTIVITY_OUTCOME_CHOICES, OTHER_OUTCOME } from "@/modules/activities/activity.form";
 import { logDataAccess } from "@/modules/leads/audit";
 import { counsellorQueueOrder, myLeadsWhere } from "@/modules/leads/lead.queries";
@@ -222,14 +221,14 @@ export default async function MyLeadsPage({ searchParams }: { searchParams: Prom
                 <table className="table table-bordered table-striped">
                   <thead>
                     <tr>
-                      <th>Lead ID</th><th>Name</th><th>Course / Exam</th><th>Email</th><th>Phone</th><th>Source</th>
-                      <th>Status</th><th>Priority</th><th>Last Contact</th><th>Next Visit</th><th>Recent Activity</th><th></th>
+                      <th>#</th><th>Name</th><th>Course / Exam</th><th>Email</th><th>Phone</th><th>Source</th>
+                      <th>Status</th><th>Priority</th><th>Recent Activity</th><th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map(({ lead, recent }) => (
+                    {rows.map(({ lead, recent }, index) => (
                       <tr key={lead.id}>
-                        <td>{lead.lead_id}</td>
+                        <td>{leads.start_index + index}</td>
                         <td>{lead.first_name} {lead.last_name}</td>
                         <td>{lead.course_interested || "—"}</td>
                         <td>{lead.email}</td>
@@ -241,8 +240,6 @@ export default async function MyLeadsPage({ searchParams }: { searchParams: Prom
                         <td>{lead.source?.name}</td>
                         <td><StatusBadge code={lead.status} /></td>
                         <td><PriorityBadge code={lead.priority} /></td>
-                        <td>{lead.last_contact_date ? formatDjango(lead.last_contact_date, "M d, Y") : "Never"}</td>
-                        <td>{lead.next_follow_up ? formatDjango(lead.next_follow_up, "M d, Y") : "Not scheduled"}</td>
                         <td>{recent ? recent.subject.slice(0, 70) : "—"}</td>
                         <td>
                           <Link className="btn btn-sm btn-info mr-1" href={reverse("lead_detail", lead.id)}>View</Link>

@@ -32,6 +32,7 @@ export const ACTIVITY_TYPE_SEEDS = [
   { code: "FOLLOW_UP", name: "Visit", icon: "fas fa-calendar-check", color: "success", is_system: true, sort_order: 50 },
   { code: "TRANSFER", name: "Lead Transfer", icon: "fas fa-exchange-alt", color: "secondary", is_system: true, sort_order: 60 },
   { code: "STATUS_CHANGE", name: "Status Change", icon: "fas fa-flag", color: "warning", is_system: true, sort_order: 65 },
+  { code: "PROFILE_EDIT", name: "Profile Edit", icon: "fas fa-user-edit", color: "info", is_system: true, sort_order: 66 },
   { code: "NOTE", name: "Note", icon: "fas fa-sticky-note", color: "dark", is_system: false, sort_order: 70 },
 ];
 

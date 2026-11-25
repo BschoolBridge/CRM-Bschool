@@ -80,6 +80,7 @@ function CounsellorMenu({ active, shell }: { active: string; shell: ShellState }
         </>
       ) : null}
       <li className="nav-header">WORK</li>
+      <Item href={reverse("counsellor_call_queue")} icon="fas fa-headset" label="Call Queue" active={active === "counsellor_call_queue"} badge={shell.callQueueCount} />
       <Item href={reverse("my_activities")} icon="fas fa-history" label="Follow-ups" active={active === "counsellor_activities"} />
       <Item href={reverse("pending_tasks")} icon="fas fa-clipboard-list" label="My Tasks" active={active === "counsellor_pending_tasks"} badge={shell.pendingTaskCount} />
       <Item href={reverse("my_daily_target")} icon="fas fa-bullseye" label="Daily Targets" active={active === "counsellor_daily_target"} />

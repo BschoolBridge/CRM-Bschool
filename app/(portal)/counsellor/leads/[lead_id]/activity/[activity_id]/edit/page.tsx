@@ -12,11 +12,12 @@ import {
 } from "@/modules/activities/activity.service";
 import { invalidateCounsellorSnapshot } from "@/modules/dashboard/cache-keys";
 import { presentActivity, presentLead } from "@/modules/presenters";
-import { formInput, formMarkup, recordFromFormData, type FormState } from "@/server/form";
+import { formInput, recordFromFormData, type FormState } from "@/server/form";
 import { flash } from "@/server/flash";
 import { readSearch, requiredId, type SearchParams } from "@/server/request";
 import { Card, PageHeader } from "@/components/ui";
-import { ClientForm } from "@/components/client-form";
+import { ActivityFormSection } from "@/components/activity-form-section";
+import { activityFormMarkup } from "@/modules/activities/activity-form-markup";
 import { fail } from "../../../../../../_lib/access";
 import { myLeadFiltersFrom, myLeadsRedirectPath } from "../../../../../../_lib/my-leads-filters";
 import { ownedActivity } from "../../../../../_lib/owned";
@@ -29,7 +30,7 @@ async function save(leadId: number, activityId: number, _state: FormState, fd: F
   const form = await LeadActivityForm.create({ ...(await formInput(fd)), instance: activity });
   if (!(await form.isValid())) {
     await flash("error", "Please fill the form properly!");
-    return { markup: formMarkup(form) };
+    return { markup: activityFormMarkup(form) };
   }
   const notices: Array<["success" | "warning", string]> = [];
   try {
@@ -43,7 +44,11 @@ async function save(leadId: number, activityId: number, _state: FormState, fd: F
       if (await isActivityFrozen(counsellor.id)) {
         notices.push(["warning", `Activity updated, but follow-up could not be scheduled: ${counsellorActivityFrozenMessage()}`]);
       } else {
-        await createPendingFollowup(lead.id, counsellor.id, saved, form.cleaned_data.followup_date);
+        await createPendingFollowup(lead.id, counsellor.id, {
+          ...saved,
+          followup_notes: form.cleaned_data.followup_notes,
+          next_action_title: form.cleaned_data.next_action_title,
+        }, form.cleaned_data.followup_date);
         await maybeFreezeForActivityBurst(counsellor.id);
         notices.push(["success", "Activity completed & next follow-up scheduled!"]);
       }
@@ -53,7 +58,7 @@ async function save(leadId: number, activityId: number, _state: FormState, fd: F
     await invalidateCounsellorSnapshot(counsellor.id);
   } catch (err) {
     await flash("error", fail(err, "Could not update activity"));
-    return { markup: formMarkup(form) };
+    return { markup: activityFormMarkup(form) };
   }
   for (const [level, text] of notices) await flash(level, text);
   redirect(await myLeadsRedirectPath(recordFromFormData(fd)));
@@ -81,9 +86,9 @@ export default async function EditActivityPage({
       <section className="content">
         <div className="container-fluid">
           <Card title={`Edit activity — ${activity.subject}`}>
-            <ClientForm
+            <ActivityFormSection
               action={save.bind(null, lead.id, activity.id)}
-              markup={formMarkup(blank)}
+              markup={activityFormMarkup(blank)}
               submitLabel="Save"
               extra={Object.entries(filters).map(([key, value]) => value ? <input key={key} type="hidden" name={key} value={value} /> : null)}
             />

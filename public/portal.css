@@ -738,13 +738,18 @@
         .crm-activity-list {
             display: flex;
             flex-direction: column;
-            gap: 0.65rem;
+            gap: 0.4rem;
+        }
+        .crm-activity-list--scroll {
+            max-height: 28rem;
+            overflow-y: auto;
+            padding-right: 0.15rem;
         }
         .crm-activity-item {
             display: flex;
             align-items: flex-start;
-            gap: 0.85rem;
-            padding: 0.85rem 1rem;
+            gap: 0.65rem;
+            padding: 0.55rem 0.7rem;
             border-radius: 6px;
             background: #ffffff;
             border: 1px solid #f1f5f9;
@@ -755,18 +760,18 @@
             border-color: #e2e8f0;
         }
         .crm-activity-icon {
-            width: 34px;
-            height: 34px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.78rem;
             flex-shrink: 0;
-            margin-top: 2px;
+            margin-top: 1px;
         }
         .crm-activity-lead {
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             font-weight: 600;
             color: #0f172a;
             text-decoration: none !important;
@@ -775,16 +780,39 @@
             color: #3157E8;
         }
         .crm-activity-subject {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             color: #475569;
-            margin: 0.2rem 0 0.35rem 0;
+            margin: 0.1rem 0 0.2rem 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .crm-activity-meta {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #94a3b8;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.35rem 0.65rem;
+        }
+        .crm-activity-meta--clamp {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            align-items: unset;
+        }
+        @media (max-width: 767.98px) {
+            .crm-activity-item-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .crm-activity-actions {
+                flex-wrap: wrap;
+            }
         }
 
         /* Empty State */
@@ -1080,5 +1108,259 @@
             background: #dc2626;
             color: #ffffff;
             border-color: #dc2626;
+        }
+
+        /* Counsellor lead detail */
+        .crm-lead-page {
+            padding: 1.25rem 1rem 3rem;
+        }
+        .crm-lead-status-panel {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1rem 1.15rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        .crm-lead-status-panel-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #64748b;
+            margin: 0 0 0.75rem 0;
+        }
+        .crm-status-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+        .crm-status-chip {
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #334155;
+            border-radius: 9999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+        }
+        .crm-status-chip:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+        .crm-status-chip.is-active {
+            background: #3157E8;
+            border-color: #3157E8;
+            color: #ffffff;
+        }
+        .crm-status-chip:disabled {
+            cursor: default;
+            opacity: 1;
+        }
+        .crm-lead-header {
+            background: #18204A;
+            border: 1px solid #28336a;
+            border-radius: 10px;
+            padding: 1.35rem 1.5rem;
+            color: #ffffff;
+            margin-bottom: 1.25rem;
+        }
+        .crm-lead-header-top {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .crm-lead-header h1 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0 0 0.35rem 0;
+            color: #ffffff;
+        }
+        .crm-lead-header-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.45rem;
+        }
+        .crm-lead-header-meta .badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.3rem 0.55rem;
+            border-radius: 4px;
+        }
+        .crm-lead-id {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        .crm-lead-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .crm-lead-actions .btn {
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.84rem;
+        }
+        .crm-lead-actions .btn-light {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+        .crm-lead-actions .btn-light:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+        .crm-field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .crm-field-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .crm-field {
+            min-width: 0;
+        }
+        .crm-field-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #64748b;
+            margin-bottom: 0.2rem;
+        }
+        .crm-field-value {
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: #0f172a;
+            word-break: break-word;
+        }
+        .crm-field-value .text-muted {
+            font-weight: 400;
+        }
+        .crm-section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #64748b;
+            margin: 0 0 0.85rem 0;
+            padding-bottom: 0.45rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .crm-side-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .crm-side-stack .crm-card {
+            margin-bottom: 0;
+        }
+        .crm-side-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .crm-side-actions .btn,
+        .crm-side-actions a.btn {
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.65rem 0.85rem;
+        }
+        .crm-note-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            color: #334155;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            margin: 0;
+        }
+        .crm-alt-phone-list {
+            list-style: none;
+            margin: 0.35rem 0 0.75rem;
+            padding: 0;
+        }
+        .crm-alt-phone-list li {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            align-items: center;
+            padding: 0.35rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.88rem;
+        }
+        .crm-activity-actions {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 0.3rem;
+            flex-shrink: 0;
+            margin-top: 0;
+        }
+        .crm-activity-actions .btn {
+            padding: 0.15rem 0.45rem;
+            font-size: 0.72rem;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+        .crm-activity-item-main {
+            flex: 1;
+            min-width: 0;
+        }
+        .crm-activity-item-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .crm-notification-body {
+            font-size: 0.82rem;
+            color: #475569;
+            margin: 0.15rem 0 0;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .crm-queue-item {
+            align-items: flex-start;
+        }
+        .crm-quick-outcome {
+            width: 100%;
+        }
+        .crm-quick-outcome-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+        .crm-quick-outcome-row .form-group {
+            flex: 1 1 9rem;
+            min-width: 8.5rem;
+        }
+        .crm-quick-outcome-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding-bottom: 0.1rem;
         }
 

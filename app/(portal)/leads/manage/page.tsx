@@ -247,7 +247,6 @@ export default async function ManageLeadsPage({ searchParams }: { searchParams: 
                     <tr>
                       <th><SelectAll /></th>
                       <th>#</th>
-                      <th>Lead ID</th>
                       <th>Name</th>
                       <th>Phone</th>
                       <th>Course Interested In</th>
@@ -261,7 +260,7 @@ export default async function ManageLeadsPage({ searchParams }: { searchParams: 
                   <tbody>
                     {leads.length === 0 ? (
                       <tr>
-                        <td colSpan={11}><Empty text="No leads found." /></td>
+                        <td colSpan={10}><Empty text="No leads found." /></td>
                       </tr>
                     ) : (
                       leads.map((lead, index) => (
@@ -270,7 +269,6 @@ export default async function ManageLeadsPage({ searchParams }: { searchParams: 
                             <input type="checkbox" className="lead-checkbox" name="lead_ids" value={lead.id} />
                           </td>
                           <td>{rowNumber(filteredCount, leads.start_index, index)}</td>
-                          <td><code>{lead.lead_id || "—"}</code></td>
                           <td>{lead.first_name} {lead.last_name}</td>
                           <td>
                             {lead.phone ? <a href={`tel:${lead.phone}`}>{lead.phone}</a> : <span className="text-muted">Not provided</span>}

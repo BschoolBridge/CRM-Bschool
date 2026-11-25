@@ -21,7 +21,11 @@ export async function saveAdminActivity(
     await createPendingFollowup(
       lead.id,
       counsellorId,
-      activity,
+      {
+        ...activity,
+        followup_notes: form.cleaned_data.followup_notes,
+        next_action_title: form.cleaned_data.next_action_title,
+      },
       followupDate,
       existing ? existing.logged_by_admin_id : adminId,
     );

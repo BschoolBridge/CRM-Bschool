@@ -27,12 +27,16 @@ export default async function PendingTasksPage() {
   });
   const trulyPending = [];
   for (const activity of withNext) {
+    // Follow-ups are created as incomplete rows (mapped activity_type), not as
+    // activity_type === next_action code.
     const hasFollowup = await prisma.leadActivity.findFirst({
       where: {
         lead_id: activity.lead_id,
         counsellor_id: counsellor.id,
-        activity_type: activity.next_action,
-        completed_date: { gt: activity.completed_date },
+        OR: [
+          { is_completed: false, scheduled_date: { gte: activity.completed_date } },
+          { completed_date: { gt: activity.completed_date }, subject: { startsWith: "Scheduled visit" } },
+        ],
       },
       select: { id: true },
     });

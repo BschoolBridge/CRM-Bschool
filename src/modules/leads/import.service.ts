@@ -6,6 +6,7 @@ import { isBlankCell, readSpreadsheet, type SheetRow } from "../../lib/spreadshe
 import { invalidateAdminDashboard } from "../dashboard/cache-keys";
 import { notifyLeadsAssigned } from "../notifications/assignment-notifications";
 import { assignLeads, assignmentMethodLabel } from "./assignment.service";
+import { remapImportRow } from "./import-columns";
 import { allocateLeadIds } from "./lead-ids";
 import { createLead, type LeadCreateData } from "./lead.repository";
 import { duplicatePhoneMessage, findLeadByPhone } from "./phone-lookup";
@@ -86,7 +87,7 @@ function cellText(row: SheetRow, key: string, fallback = ""): string {
   return s || fallback;
 }
 
-/** Case-insensitive lookup across website + legacy import column names. */
+/** Lookup after remapImportRow; still tolerates leftover aliases / case differences. */
 function cellAny(row: SheetRow, ...keys: string[]): string {
   for (const key of keys) {
     const direct = cellText(row, key);
@@ -103,17 +104,18 @@ function cellAny(row: SheetRow, ...keys: string[]): string {
 }
 
 function failureRow(rowNum: number, row: SheetRow, reason: string): ImportFailureRow {
+  const mapped = remapImportRow(row);
   const raw: Record<string, string> = {};
   for (const [key, value] of Object.entries(row)) {
     const k = key.trim();
     if (k) raw[k] = isBlankCell(value) ? "" : String(value).trim();
   }
-  const name = cellAny(row, "fullName", "full_name", "name");
+  const name = cellAny(mapped, "fullName", "full_name", "name");
   return {
     row_num: rowNum,
     name,
-    email: cellAny(row, "email", "email_address"),
-    phone: cellAny(row, "phone", "mobile", "phone_number"),
+    email: cellAny(mapped, "email", "email_address"),
+    phone: cellAny(mapped, "phone", "mobile", "phone_number"),
     reason,
     raw_row: raw,
   };
@@ -134,8 +136,11 @@ function lengthErrors(data: Record<string, unknown>): string | null {
 
 /** One import row → lead columns; throws with the reason shown in the failure report. */
 export function leadFromImportRow(row: SheetRow, sourceId: number, assignedCounsellorId: number | null): LeadCreateData {
-  const fullName = cellAny(row, "fullName", "full_name", "name", "student_name", "applicant_name");
-  const phoneRaw = cellAny(row, "phone", "mobile", "phone_number");
+  // Map similar headers ("Full Name", "Mobile No.") onto canonical template keys.
+  const mapped = remapImportRow(row);
+
+  const fullName = cellAny(mapped, "fullName", "full_name", "name", "student_name", "applicant_name");
+  const phoneRaw = cellAny(mapped, "phone", "mobile", "phone_number");
   if (!fullName) throw new Error("Missing required column value: fullName (or name)");
   if (!phoneRaw) throw new Error("Missing required column value: phone");
 
@@ -143,38 +148,40 @@ export function leadFromImportRow(row: SheetRow, sourceId: number, assignedCouns
   if (!phone) throw new Error("Missing or invalid phone number");
 
   const [first = "", ...rest] = fullName.split(/\s+/).filter(Boolean);
-  const email = cellAny(row, "email", "email_address").toLowerCase() || placeholderLeadEmail(phone);
-  const targetExam = cellAny(row, "targetExam", "target_exam", "exam");
-  const specialization = cellAny(row, "specialization");
+  const email = cellAny(mapped, "email", "email_address").toLowerCase() || placeholderLeadEmail(phone);
+  const targetExam = cellAny(mapped, "targetExam", "target_exam", "exam");
+  const specialization = cellAny(mapped, "specialization");
   const courseInterested =
-    cellAny(row, "course_interested")
+    cellAny(mapped, "course_interested")
     || [specialization, targetExam].filter(Boolean).join(" · ").slice(0, 200);
-  const college = cellAny(row, "college", "school_name", "School Name", "graduation_college");
-  const city = cellAny(row, "city").slice(0, 100);
+  const college = cellAny(mapped, "college", "school_name", "School Name", "graduation_college");
+  const city = cellAny(mapped, "city").slice(0, 100);
+  const fatherName = cellAny(mapped, "Father Name", "father_name", "fatherName", "fathers_name", "parent_name");
   const noteLines = [
-    cellAny(row, "notes", "message", "comments", "remark"),
+    cellAny(mapped, "notes", "message", "comments", "remark"),
+    fatherName ? `Father name: ${fatherName}` : "",
     targetExam ? `Target exam: ${targetExam}` : "",
-    cellAny(row, "percentile", "score_band", "exam_percentile")
-      ? `Percentile/score: ${cellAny(row, "percentile", "score_band", "exam_percentile")}`
+    cellAny(mapped, "percentile", "score_band", "exam_percentile")
+      ? `Percentile/score: ${cellAny(mapped, "percentile", "score_band", "exam_percentile")}`
       : "",
-    cellAny(row, "workExperience", "work_experience")
-      ? `Work experience: ${cellAny(row, "workExperience", "work_experience")}`
+    cellAny(mapped, "workExperience", "work_experience")
+      ? `Work experience: ${cellAny(mapped, "workExperience", "work_experience")}`
       : "",
-    cellAny(row, "academicBackground", "academic_background")
-      ? `Academic background: ${cellAny(row, "academicBackground", "academic_background")}`
+    cellAny(mapped, "academicBackground", "academic_background")
+      ? `Academic background: ${cellAny(mapped, "academicBackground", "academic_background")}`
       : "",
-    cellAny(row, "budget") ? `Budget: ${cellAny(row, "budget")}` : "",
-    cellAny(row, "source", "lead_source", "form_type", "form")
-      ? `Website source: ${cellAny(row, "source", "lead_source", "form_type", "form")}`
+    cellAny(mapped, "budget") ? `Budget: ${cellAny(mapped, "budget")}` : "",
+    cellAny(mapped, "source", "lead_source", "form_type", "form")
+      ? `Website source: ${cellAny(mapped, "source", "lead_source", "form_type", "form")}`
       : "",
   ].filter(Boolean);
 
-  let graduationStatus = cellAny(row, "graduation_status").toUpperCase() || "NO";
+  let graduationStatus = cellAny(mapped, "graduation_status").toUpperCase() || "NO";
   if (!["YES", "NO"].includes(graduationStatus)) graduationStatus = "NO";
   const graduated = graduationStatus === "YES";
 
   let graduationYear: number | null = null;
-  const yearRaw = cellAny(row, "graduation_year");
+  const yearRaw = cellAny(mapped, "graduation_year");
   if (yearRaw) {
     const n = Math.trunc(Number(yearRaw));
     graduationYear = Number.isFinite(n) ? n : null;
@@ -185,18 +192,18 @@ export function leadFromImportRow(row: SheetRow, sourceId: number, assignedCouns
     last_name: (rest.length ? fullName.slice(first.length).trim() : "").slice(0, 100),
     email,
     phone,
-    alternate_phone: cellAny(row, "alternate_phone"),
+    alternate_phone: cellAny(mapped, "alternate_phone"),
     school_name: college.slice(0, 200),
-    address: cellAny(row, "address"),
+    address: cellAny(mapped, "address"),
     city,
     graduation_status: graduationStatus,
-    graduation_course: graduated ? cellAny(row, "graduation_course") || "Not Specified" : "Not Applicable",
-    graduation_college: graduated ? cellAny(row, "graduation_college") || "Not Specified" : "Not Applicable",
+    graduation_course: graduated ? cellAny(mapped, "graduation_course") || "Not Specified" : "Not Applicable",
+    graduation_college: graduated ? cellAny(mapped, "graduation_college") || "Not Specified" : "Not Applicable",
     graduation_year: graduationYear,
     course_interested: courseInterested,
-    industry: cellAny(row, "industry"),
+    industry: cellAny(mapped, "industry"),
     notes: noteLines.join("\n"),
-    source_campaign: cellAny(row, "source", "lead_source", "form_type", "form").slice(0, 150) || null,
+    source_campaign: cellAny(mapped, "source", "lead_source", "form_type", "form").slice(0, 150) || null,
     source_id: sourceId,
     assigned_counsellor_id: assignedCounsellorId,
     is_graduated: graduated ? "YES" : "NO",

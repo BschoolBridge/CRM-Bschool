@@ -38,6 +38,10 @@ interface ActivitySource {
   outcome: string;
   next_action: string;
   description: string;
+  /** Optional counsellor note for the scheduled follow-up row. */
+  followup_notes?: string | null;
+  /** Optional custom title for the scheduled follow-up subject. */
+  next_action_title?: string | null;
 }
 
 async function followupActivityType(source: ActivitySource): Promise<string> {
@@ -49,6 +53,11 @@ async function followupActivityType(source: ActivitySource): Promise<string> {
 }
 
 async function followupSubject(source: ActivitySource, followupDate: Date | null): Promise<string> {
+  const customTitle = (source.next_action_title ?? "").trim();
+  if (customTitle) {
+    if (followupDate) return `${customTitle.slice(0, 160)} — ${formatHumanDateTime(followupDate)}`.slice(0, 200);
+    return customTitle.slice(0, 200);
+  }
   if (source.outcome.trim() === OUTCOME_VISIT_SCHEDULED && followupDate) {
     return `Scheduled visit — ${formatHumanDateTime(followupDate)}`;
   }
@@ -67,7 +76,13 @@ export async function createPendingFollowup(
   loggedByAdminId: number | null = null,
   db: Db = prisma,
 ) {
-  const note = source.description.trim();
+  const followupNotes = (source.followup_notes ?? "").trim();
+  const fromDescription = source.description.trim();
+  const description = followupNotes
+    ? followupNotes.slice(0, 1000)
+    : fromDescription
+      ? `Follow-up from: ${fromDescription.slice(0, 500)}`
+      : "Scheduled from previous activity.";
   return db.leadActivity.create({
     data: {
       lead_id: leadId,
@@ -75,7 +90,7 @@ export async function createPendingFollowup(
       logged_by_admin_id: loggedByAdminId,
       activity_type: await followupActivityType(source),
       subject: (await followupSubject(source, followupDate)).slice(0, 200),
-      description: note ? `Follow-up from: ${note.slice(0, 500)}` : "Scheduled from previous activity.",
+      description,
       outcome: "",
       next_action: "",
       scheduled_date: followupDate,

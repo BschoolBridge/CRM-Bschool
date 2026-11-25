@@ -3,7 +3,9 @@ import {
   CharField,
   ChoiceField,
   DateTimeField,
+  DecimalField,
   EmailField,
+  IntegerField,
   ModelChoiceField,
   TextField,
   ValidationError,
@@ -13,9 +15,22 @@ import { Form, type FormInput } from "../../forms/form";
 import type { Lead } from "../../generated/prisma/client";
 import { normalizeLeadPhone, placeholderLeadEmail } from "../../lib/phone";
 import { prisma } from "../../lib/prisma";
+import { GRADUATION_CHOICES } from "../presenters";
 import { LEAD_PRIORITIES, leadStatusChoices } from "../reference/reference.service";
 import { counsellorOptions } from "../users/user-options";
 import { duplicatePhoneMessage, findLeadByPhone } from "./phone-lookup";
+
+const PROFILE_EXTRA_FIELDS = [
+  "graduation_status",
+  "graduation_course",
+  "graduation_year",
+  "graduation_college",
+  "position",
+  "industry",
+  "website",
+  "linkedin",
+  "expected_value",
+] as const;
 
 type Variant = "admin" | "counsellor-edit" | "counsellor-create";
 
@@ -26,14 +41,21 @@ const FIELD_ORDER: Record<Variant, string[]> = {
     "phone",
     "email",
     "alternate_phone",
+    "whatsapp_phone",
+    "preferred_language",
     "target_exam",
     "percentile",
     "city",
+    "address",
+    "state",
+    "country",
+    "postal_code",
     "work_experience",
     "academic_background",
     "budget",
     "specialization",
     "college",
+    ...PROFILE_EXTRA_FIELDS,
     "notes",
     "source",
     "status",
@@ -46,15 +68,23 @@ const FIELD_ORDER: Record<Variant, string[]> = {
     "phone",
     "email",
     "alternate_phone",
+    "whatsapp_phone",
+    "preferred_language",
     "target_exam",
     "percentile",
     "city",
+    "address",
+    "state",
+    "country",
+    "postal_code",
     "work_experience",
     "academic_background",
     "budget",
     "specialization",
     "college",
+    ...PROFILE_EXTRA_FIELDS,
     "notes",
+    "source",
     "status",
     "priority",
     "next_follow_up",
@@ -64,14 +94,21 @@ const FIELD_ORDER: Record<Variant, string[]> = {
     "phone",
     "email",
     "alternate_phone",
+    "whatsapp_phone",
+    "preferred_language",
     "target_exam",
     "percentile",
     "city",
+    "address",
+    "state",
+    "country",
+    "postal_code",
     "work_experience",
     "academic_background",
     "budget",
     "specialization",
     "college",
+    ...PROFILE_EXTRA_FIELDS,
     "notes",
     "source",
     "status",
@@ -91,6 +128,14 @@ const VIRTUAL_FIELDS = new Set([
   "college",
 ]);
 
+const NOTE_META_LABELS: Array<{ label: string; field: string }> = [
+  { label: "Target exam", field: "target_exam" },
+  { label: "Percentile/score", field: "percentile" },
+  { label: "Work experience", field: "work_experience" },
+  { label: "Academic background", field: "academic_background" },
+  { label: "Budget", field: "budget" },
+];
+
 const MODEL_REQUIRED = new Set(["phone", "status", "priority", "name"]);
 const ALWAYS_REQUIRED = new Set(["name", "phone", "source"]);
 
@@ -99,14 +144,29 @@ export interface LeadCleaned {
   email: string;
   phone: string;
   alternate_phone: string;
+  whatsapp_phone: string;
+  preferred_language: string;
   target_exam: string;
   percentile: string;
   city: string;
+  address: string;
+  state: string;
+  country: string;
+  postal_code: string;
   work_experience: string;
   academic_background: string;
   budget: string;
   specialization: string;
   college: string;
+  graduation_status: string;
+  graduation_course: string;
+  graduation_year: number | null;
+  graduation_college: string;
+  position: string;
+  industry: string;
+  website: string;
+  linkedin: string;
+  expected_value: string | null;
   notes: string;
   source: number | null;
   status: string;
@@ -118,6 +178,27 @@ export interface LeadCleaned {
 function noteLine(label: string, value: string): string {
   const t = value.trim();
   return t ? `${label}: ${t}` : "";
+}
+
+/** Split freeform notes from labeled website meta lines written by leadData(). */
+export function parseLeadNoteMeta(notes: string): { freeform: string; meta: Record<string, string> } {
+  const meta: Record<string, string> = {};
+  const freeform: string[] = [];
+  for (const raw of (notes ?? "").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    let matched = false;
+    for (const item of NOTE_META_LABELS) {
+      const prefix = `${item.label}:`;
+      if (line.toLowerCase().startsWith(prefix.toLowerCase())) {
+        meta[item.field] = line.slice(prefix.length).trim();
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) freeform.push(raw);
+  }
+  return { freeform: freeform.join("\n").trim(), meta };
 }
 
 export class LeadForm extends Form<LeadCleaned> {
@@ -151,20 +232,35 @@ export class LeadForm extends Form<LeadCleaned> {
       phone: new CharField({ maxLength: 15, label: "Phone" }),
       email: new EmailField({ label: "Email" }),
       alternate_phone: new CharField({ maxLength: 15, label: "Alternate Phone" }),
+      whatsapp_phone: new CharField({ maxLength: 20, label: "WhatsApp" }),
+      preferred_language: new CharField({ maxLength: 50, label: "Preferred Language" }),
       target_exam: new CharField({ maxLength: 100, label: "Target Exam" }),
       percentile: new CharField({ maxLength: 50, label: "Percentile / Score" }),
       city: new CharField({ maxLength: 100, label: "City" }),
+      address: new TextField({ label: "Address" }),
+      state: new CharField({ maxLength: 100, label: "State" }),
+      country: new CharField({ maxLength: 100, label: "Country" }),
+      postal_code: new CharField({ maxLength: 30, label: "Postal Code" }),
       work_experience: new CharField({ maxLength: 100, label: "Work Experience" }),
       academic_background: new CharField({ maxLength: 200, label: "Academic Background" }),
       budget: new CharField({ maxLength: 100, label: "Budget" }),
       specialization: new CharField({ maxLength: 100, label: "Specialization" }),
       college: new CharField({ maxLength: 200, label: "College" }),
+      graduation_status: new ChoiceField({ choices: GRADUATION_CHOICES, initial: "NO", label: "Graduated?" }),
+      graduation_course: new CharField({ maxLength: 200, label: "Graduation Course" }),
+      graduation_year: new IntegerField({ label: "Graduation Year" }),
+      graduation_college: new CharField({ maxLength: 200, label: "Graduation College" }),
+      position: new CharField({ maxLength: 100, label: "Current Role / Position" }),
+      industry: new CharField({ maxLength: 100, label: "Industry" }),
+      website: new CharField({ maxLength: 200, label: "Website" }),
+      linkedin: new CharField({ maxLength: 200, label: "LinkedIn" }),
+      expected_value: new DecimalField({ label: "Expected Fee / Value", maxDigits: 12, decimalPlaces: 2 }),
       notes: new TextField({ label: "Notes" }),
       source: new ModelChoiceField(
         sources.map((s) => ({ id: s.id, label: s.name })),
         { label: "Source", emptyLabel: this.variant === "counsellor-create" ? "Select lead source" : "---------" },
       ),
-      status: new ChoiceField({ choices: statuses, initial: "NEW", label: "Status" }),
+      status: new ChoiceField({ choices: statuses, initial: "NEW", label: "Lead Status" }),
       priority: new ChoiceField({ choices: LEAD_PRIORITIES, initial: "MEDIUM", label: "Priority" }),
       assigned_counsellor: new ModelChoiceField(counsellors, { label: "Assigned counsellor" }),
       next_follow_up: new DateTimeField({ label: "Next follow up" }),
@@ -174,7 +270,9 @@ export class LeadForm extends Form<LeadCleaned> {
     for (const name of FIELD_ORDER[this.variant]) {
       const field = all[name]!;
       field.required =
-        this.variant === "counsellor-edit" ? MODEL_REQUIRED.has(name) && name !== "email" : ALWAYS_REQUIRED.has(name);
+        this.variant === "counsellor-edit"
+          ? (MODEL_REQUIRED.has(name) && name !== "email") || name === "source"
+          : ALWAYS_REQUIRED.has(name);
       fields[name] = field;
     }
     this.setFields(bootstrapFields(fields));
@@ -183,6 +281,12 @@ export class LeadForm extends Form<LeadCleaned> {
       name: (v: string) => v.trim(),
       email: (v: string) => v.trim().toLowerCase(),
       alternate_phone: (v: string) => (v.trim() ? normalizeLeadPhone(v) : ""),
+      whatsapp_phone: (v: string) => v.trim(),
+      preferred_language: (v: string) => v.trim(),
+      address: (v: string) => v.trim(),
+      state: (v: string) => v.trim(),
+      country: (v: string) => v.trim(),
+      postal_code: (v: string) => v.trim(),
       phone: async (v: string) => {
         const phone = normalizeLeadPhone(v);
         if (!phone) throw ValidationError.of("Phone number is required.");
@@ -198,14 +302,29 @@ export class LeadForm extends Form<LeadCleaned> {
 
     if (this.instance) {
       const lead = this.instance;
+      const parsed = parseLeadNoteMeta(lead.notes ?? "");
+      const courseParts = String(lead.course_interested ?? "")
+        .split("·")
+        .map((part) => part.trim())
+        .filter(Boolean);
       for (const name of FIELD_ORDER[this.variant]) {
         if (name === "name") this.setInitial("name", `${lead.first_name} ${lead.last_name}`.trim() || lead.first_name);
         else if (name === "source") this.setInitial(name, lead.source_id);
         else if (name === "assigned_counsellor") this.setInitial(name, lead.assigned_counsellor_id);
         else if (name === "college") this.setInitial(name, lead.school_name);
-        else if (name === "specialization") this.setInitial(name, lead.course_interested);
-        else if (VIRTUAL_FIELDS.has(name)) this.setInitial(name, "");
-        else this.setInitial(name, (lead as Record<string, unknown>)[name]);
+        else if (name === "specialization") this.setInitial(name, courseParts[0] ?? lead.course_interested ?? "");
+        else if (name === "notes") this.setInitial(name, parsed.freeform);
+        else if (name === "target_exam") {
+          this.setInitial(name, parsed.meta.target_exam || courseParts[1] || "");
+        } else if (name === "graduation_course" || name === "graduation_college") {
+          const raw = String((lead as Record<string, unknown>)[name] ?? "");
+          this.setInitial(name, ["Not Specified", "Not Applicable", ""].includes(raw) ? "" : raw);
+        } else if (name === "expected_value") {
+          const raw = lead.expected_value;
+          this.setInitial(name, raw == null || String(raw) === "0" ? "" : String(raw));
+        } else if (VIRTUAL_FIELDS.has(name)) {
+          this.setInitial(name, parsed.meta[name] ?? "");
+        } else this.setInitial(name, (lead as Record<string, unknown>)[name]);
       }
     }
   }
@@ -237,21 +356,32 @@ export class LeadForm extends Form<LeadCleaned> {
       email,
       phone,
       alternate_phone: c.alternate_phone ?? "",
+      whatsapp_phone: String(c.whatsapp_phone ?? "").trim() || null,
+      preferred_language: String(c.preferred_language ?? "").trim() || null,
       school_name: college.slice(0, 200),
       city: String(c.city ?? "").slice(0, 100),
+      address: String(c.address ?? ""),
+      state: String(c.state ?? "").slice(0, 100),
+      country: String(c.country ?? "").slice(0, 100),
+      postal_code: String(c.postal_code ?? "").slice(0, 30),
       course_interested: courseInterested,
       notes: noteLines.join("\n"),
       status: c.status,
       priority: c.priority,
       next_follow_up: c.next_follow_up ?? null,
-      graduation_status: this.instance?.graduation_status ?? "NO",
-      graduation_course: this.instance?.graduation_course ?? "Not Applicable",
-      graduation_college: this.instance?.graduation_college ?? "Not Applicable",
-      graduation_year: this.instance?.graduation_year ?? null,
-      is_graduated: this.instance?.is_graduated ?? "NO",
+      graduation_status: String(c.graduation_status ?? this.instance?.graduation_status ?? "NO"),
+      graduation_course: String(c.graduation_course ?? "").trim() || this.instance?.graduation_course || "Not Applicable",
+      graduation_college: String(c.graduation_college ?? "").trim() || this.instance?.graduation_college || "Not Applicable",
+      graduation_year: c.graduation_year ?? this.instance?.graduation_year ?? null,
+      is_graduated: String(c.graduation_status ?? this.instance?.is_graduated ?? "NO") === "YES" ? "YES" : "NO",
+      position: String(c.position ?? "").trim().slice(0, 100),
+      industry: String(c.industry ?? "").trim().slice(0, 100),
+      website: String(c.website ?? "").trim().slice(0, 200),
+      linkedin: String(c.linkedin ?? "").trim().slice(0, 200),
+      expected_value: c.expected_value ?? this.instance?.expected_value ?? 0,
     };
 
-    if (this.variant !== "counsellor-edit") {
+    if (FIELD_ORDER[this.variant].includes("source")) {
       out.source_id = c.source;
     }
     if (this.variant === "admin") {

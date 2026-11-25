@@ -128,6 +128,7 @@ export const ROUTES = {
   update_business_status: "/counsellor/businesses/:business_id/status/update/",
   my_activities: "/counsellor/activities/",
   pending_tasks: "/counsellor/pending-tasks/",
+  counsellor_call_queue: "/counsellor/call-queue/",
   my_daily_target: "/counsellor/daily-target/",
   counsellor_admission_followup: "/counsellor/admission-followup/",
   counsellor_view_admitted_student: "/counsellor/admission-followup/:student_id/view/",

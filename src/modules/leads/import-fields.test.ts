@@ -65,4 +65,23 @@ describe("lead import fields", () => {
     expect(legacy.assigned_counsellor_id).toBe(9);
     expect(legacy.email).toContain("@example.com");
   });
+
+  it("accepts human-readable similar column labels", () => {
+    const lead = leadFromImportRow(
+      {
+        "Full Name": "Priya Nair",
+        "Mobile Number": "9000012345",
+        "Email Address": "priya@example.com",
+        "Target Exam": "XAT 2026",
+        City: "Pune",
+      },
+      5,
+      null,
+    );
+    expect(lead.first_name).toBe("Priya");
+    expect(lead.phone).toBe("9000012345");
+    expect(lead.email).toBe("priya@example.com");
+    expect(lead.city).toBe("Pune");
+    expect(String(lead.notes)).toContain("Target exam: XAT 2026");
+  });
 });

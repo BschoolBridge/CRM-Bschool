@@ -165,7 +165,10 @@ export default async function CounsellorHomePage() {
             </div>
           </div>
           <div className="crm-hero-actions">
-            <Link href={reverse("counsellor_add_lead")} className="crm-btn-hero-primary">
+            <Link href={reverse("counsellor_call_queue")} className="crm-btn-hero-primary">
+              <i className="fas fa-headset" /> Today&apos;s Call Queue
+            </Link>
+            <Link href={reverse("counsellor_add_lead")} className="crm-btn-hero-secondary">
               <i className="fas fa-user-plus" /> Add Lead
             </Link>
             <Link href={reverse("my_leads")} className="crm-btn-hero-secondary">
@@ -484,7 +487,7 @@ export default async function CounsellorHomePage() {
                   <p className="crm-empty-desc">Calls, notes, and follow-ups you log will appear here.</p>
                 </div>
               ) : (
-                <div className="crm-activity-list">
+                <div className="crm-activity-list crm-activity-list--scroll">
                   {recent.map((activity) => {
                     const style = activityIconAndColor(String(shown(activity, "get_activity_type_display") || activity.activity_type));
                     const leadName = `${activity.lead.first_name} ${activity.lead.last_name}`.trim();

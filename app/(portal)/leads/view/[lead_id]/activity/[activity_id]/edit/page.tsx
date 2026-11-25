@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { unstable_rethrow, notFound, redirect } from "next/navigation";
-import { ClientForm } from "@/components/client-form";
+import { ActivityFormSection } from "@/components/activity-form-section";
 import { Card, PageHeader } from "@/components/ui";
 import { reverse } from "@/http/urls";
 import { prisma } from "@/lib/prisma";
 import { LeadActivityForm } from "@/modules/activities/activity.form";
+import { activityFormMarkup } from "@/modules/activities/activity-form-markup";
 import { fullName, presentActivity, presentLead } from "@/modules/presenters";
 import { requireSuperadmin } from "@/server/actor";
 import { flash } from "@/server/flash";
-import { formInput, formMarkup, type FormState } from "@/server/form";
+import { formInput, type FormState } from "@/server/form";
 import { requiredId } from "@/server/request";
 import { saveAdminActivity } from "../../../../../activity-save";
 import { failureText, formatStamp, presentedString } from "../../../../../format";
@@ -44,7 +45,7 @@ export default async function EditLeadActivityPage({
     const form = await LeadActivityForm.create({ ...(await formInput(fd)), instance: existing });
     if (!(await form.isValid())) {
       await flash("error", "Please correct the errors below.");
-      return { markup: formMarkup(form) };
+      return { markup: activityFormMarkup(form) };
     }
     try {
       const scheduled = await saveAdminActivity(user.id, form, current, existing.counsellor_id, existing);
@@ -53,7 +54,7 @@ export default async function EditLeadActivityPage({
     } catch (err) {
       unstable_rethrow(err);
       await flash("error", failureText("Could not update activity", err));
-      return { markup: formMarkup(form) };
+      return { markup: activityFormMarkup(form) };
     }
   }
 
@@ -70,7 +71,7 @@ export default async function EditLeadActivityPage({
             {" "}· Added {formatStamp(activity.completed_date)}
           </div>
           <Card title={`Edit Activity — ${lead.first_name} ${lead.last_name}`}>
-            <ClientForm action={save} markup={formMarkup(form)} submitLabel="Update activity" />
+            <ActivityFormSection action={save} markup={activityFormMarkup(form)} submitLabel="Update activity" />
             <Link href={reverse("admin_view_lead", lead.id)} className="btn btn-secondary mt-3">
               Cancel
             </Link>

@@ -148,6 +148,9 @@ export async function StatusBadge({ code }: { code: string | null | undefined })
 }
 
 export function PriorityBadge({ code }: { code: string | null | undefined }) {
-  const color = code === "HIGH" ? "danger" : code === "MEDIUM" ? "warning" : "secondary";
-  return <span className={`badge badge-${color}`}>{code || "—"}</span>;
+  const color =
+    code === "URGENT" || code === "HIGH" ? "danger" : code === "MEDIUM" ? "warning" : code === "LOW" ? "info" : "secondary";
+  const label =
+    code === "URGENT" ? "Urgent" : code === "HIGH" ? "High" : code === "MEDIUM" ? "Medium" : code === "LOW" ? "Low" : code || "—";
+  return <span className={`badge badge-${color}`}>{label}</span>;
 }
